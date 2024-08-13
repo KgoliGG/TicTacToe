@@ -10,6 +10,7 @@ fun reset(
     emptyCells: ArrayList<Int>,
     activeUserSetter: (Int) -> Unit // Pass a function to set activeUser
 ) {
+    // Reset the board, but don't clear the win counts
     for (i in 0..2) {
         for (j in 0..2) {
             board[i][j] = ""

@@ -14,14 +14,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             TicTacToeTheme  {
-                TicTacToeGame()
+                TicTacToeGameOfflineMultiplayer()
             }
         }
     }
 }
 
+@Composable
+fun Menu(){
+
+}
+
+
 @Preview
 @Composable
-fun UIPreview() {
-    TicTacToeGame()
+fun MenuPreview() {
+    Menu()
 }

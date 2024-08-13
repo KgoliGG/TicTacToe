@@ -6,12 +6,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
 @Composable
-fun TicTacToeGame() {
+fun TicTacToeGameOfflineMultiplayer() {
     var board by remember { mutableStateOf(Array(3) { Array(3) { "" } }) }
     var currentPlayer by remember { mutableStateOf("X") }
     var winner by remember { mutableStateOf("") }
@@ -45,13 +46,10 @@ fun TicTacToeGame() {
             confirmButton = {
                 Button(
                     onClick = {
-                        board = Array(3) { Array(3) { "" } }
-                        reset(board, player1, player2, emptyCells) { newActiveUser ->
+                        reset(board, player1, player2, emptyCells) {
+                                newActiveUser ->
                             activeUser = newActiveUser
                         }
-                        wincountplayer1 += if (dialogMessage.contains("Player 1 Wins")) 1 else 0
-                        wincountplayer2 += if (dialogMessage.contains("Player 2 Wins")) 1 else 0
-                        drawCount += if (dialogMessage.contains("Draw")) 1 else 0 // Increment draw count
                         winner = ""
                         showDialog = false
                     }
@@ -82,30 +80,41 @@ fun TicTacToeGame() {
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             Text(
-                text = "Player 1 : $wincountplayer1",
-                fontSize = 22.sp)
+                text = "Player 1: $wincountplayer1",
+                fontSize = 22.sp
+            )
             Text(
-                text = "Player 2 : $wincountplayer2",
-                fontSize = 22.sp)
+                text = "Player 2: $wincountplayer2",
+                fontSize = 22.sp
+            )
+            Text(
+                text = "Draws: $drawCount", // Display draw count
+                fontSize = 22.sp
+            )
         }
         Spacer(
             modifier = Modifier
-                .height(20.dp)
+                .height(40.dp)
         )
 
         // Display current Player when X
         if (currentPlayer == "X") {
             Text(
                 text = "Current Player: $currentPlayer",
-                fontSize = 24.sp
+                fontSize = 24.sp,
+                modifier = Modifier.height(30.dp)
             )
         } else {
-            Text(text = "", fontSize = 24.sp)
+            Text(
+                text = "",
+                fontSize = 24.sp,
+                modifier = Modifier.height(30.dp)
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        //Game Board
+        // Game Board
         for (i in 0..2) {
             Row {
                 for (j in 0..2) {
@@ -117,10 +126,21 @@ fun TicTacToeGame() {
                                 if (board[i][j].isEmpty() && winner.isEmpty()) {
                                     board[i][j] = currentPlayer
                                     currentPlayer = if (currentPlayer == "X") "O" else "X"
-                                    winner = checkWinner(
-                                        board,
-                                        setShowDialog = { showDialog = it },
-                                        setDialogMessage = { dialogMessage = it }
+                                    winner = checkWinner(board,
+                                        onWin = { winningPlayer ->
+                                            if (winningPlayer == "X") {
+                                                wincountplayer1++
+                                            } else {
+                                                wincountplayer2++
+                                            }
+                                            dialogMessage = "Player ${if (winningPlayer == "X") 1 else 2} Wins!"
+                                            showDialog = true
+                                        },
+                                        onDraw = {
+                                            dialogMessage = "It's a Draw!"
+                                            showDialog = true
+                                            drawCount++
+                                        }
                                     )
                                 }
                             },
@@ -142,20 +162,36 @@ fun TicTacToeGame() {
 
         // Display current Player when X
         if (currentPlayer != "X") {
-            Text(text = "Current Player: $currentPlayer", fontSize = 24.sp)
+            Text(
+                text = "Current Player: $currentPlayer",
+                fontSize = 24.sp,
+                modifier = Modifier.height(30.dp))
         } else {
-            Text(text = "", fontSize = 24.sp)
+            Text(
+                text = "",
+                fontSize = 24.sp,
+                modifier = Modifier.height(30.dp)
+            )
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Reset button
         Button(onClick = {
-            board = Array(3) { Array(3) { "" } }
-            reset(board, player1, player2, emptyCells) { newActiveUser ->
+            reset(board, player1, player2, emptyCells) {
+                newActiveUser ->
                 activeUser = newActiveUser
             }
             winner = ""
+            showDialog = false
         }) {
             Text("Reset")
         }
     }
+}
+
+@Preview
+@Composable
+fun OfflineMultiplayerPreview() {
+    TicTacToeGameOfflineMultiplayer()
 }
