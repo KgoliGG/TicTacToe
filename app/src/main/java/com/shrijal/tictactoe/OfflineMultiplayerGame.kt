@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import com.shrijal.tictactoe.composable.CurrentPlayerText
+import com.shrijal.tictactoe.composable.Scoreboard
 import com.shrijal.tictactoe.ui.theme.*
 import kotlin.random.Random
 import kotlin.system.exitProcess
@@ -83,7 +84,7 @@ fun TicTacToeGameOfflineMultiplayer() {
         verticalArrangement = Arrangement.Center
     ) {
 
-        //Logo Design
+        //Game Text Design
         Text(
             text = "Tic-Tac-Toe",
             style = TextStyle(
@@ -93,6 +94,19 @@ fun TicTacToeGameOfflineMultiplayer() {
                 color = Color.White,
             )
         )
+
+        Text(
+            text = "Offline Multiplayer".uppercase(),
+            style = TextStyle(
+                fontFamily = montserrat,
+                fontWeight = FontWeight(400),
+                fontSize = 16.sp,
+                color = Color.White,
+                letterSpacing = 2.sp,
+
+            )
+        )
+
         Spacer(modifier = Modifier.height(50.dp))
         // Display current Player when X
         when (currentPlayer == "X") {
@@ -114,7 +128,13 @@ fun TicTacToeGameOfflineMultiplayer() {
                         modifier = Modifier
                             .size(100.dp)
                             .clip(shape = RoundedCornerShape(10.dp))
-                            .background(Deactivated)
+                            .background(
+                                color = when (board[i][j]) {
+                                    "X" -> SecondaryActivated
+                                    "O" -> TertiaryActivated
+                                    else -> Deactivated
+                                }
+                            )
                             .clickable {
                                 if (board[i][j].isEmpty() && winner.isEmpty()) {
                                     board[i][j] = currentPlayer
@@ -167,53 +187,13 @@ fun TicTacToeGameOfflineMultiplayer() {
             false -> CurrentPlayerText(currentPlayer = "")
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         //Scoreboard
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(.9f)
-                .fillMaxHeight(.3f),
-            verticalArrangement = Arrangement.SpaceEvenly,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround
-            ){
-                Text(
-                    text = "Player 1: $wincountplayer1",
-                    style = TextStyle(
-                        fontFamily = montserrat,
-                        fontWeight = FontWeight(400),
-                        fontSize = 18.sp,
-                        color = Color.White,
-                    )
-                )
-                Text(
-                    text = "Player 2: $wincountplayer2",
-                    style = TextStyle(
-                        fontFamily = montserrat,
-                        fontWeight = FontWeight(400),
-                        fontSize = 18.sp,
-                        color = Color.White,
-                    )
-                )
-            }
-            Text(
-                text = "Draws: $drawCount", // Display draw count
-                style = TextStyle(
-                    fontFamily = montserrat,
-                    fontWeight = FontWeight(400),
-                    fontSize = 18.sp,
-                    color = Color.White,
-                )
-            )
-        }
+        Scoreboard(wincountplayer1 = wincountplayer1, wincountplayer2 = wincountplayer2, drawCount = drawCount)
         Spacer(
             modifier = Modifier
-                .height(60.dp)
+                .height(50.dp)
         )
 
         // End Game Button
@@ -233,7 +213,7 @@ fun TicTacToeGameOfflineMultiplayer() {
                 text = "X",
                 style = TextStyle(
                     fontFamily = montserrat,
-                    fontSize = 20.sp,
+                    fontSize = 28.sp,
                     fontWeight = FontWeight(600),
                     color = Primary
                 ),

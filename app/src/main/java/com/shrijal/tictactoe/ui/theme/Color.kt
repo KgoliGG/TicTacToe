@@ -6,6 +6,8 @@ val Primary = Color(0xFF0E2A3A)
 val Secondary = Color(0xFF8FCFD1)
 val Tertiary = Color(0xFFFF857D)
 val Deactivated = Color(0xFF647680)
+val SecondaryActivated = Color(0xFF075E61)
+val TertiaryActivated = Color(0xFFF9F4F4)
 
 val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
