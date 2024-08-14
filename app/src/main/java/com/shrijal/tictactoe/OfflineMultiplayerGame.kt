@@ -1,13 +1,21 @@
 package com.shrijal.tictactoe
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import com.shrijal.tictactoe.composable.CurrentPlayerText
+import com.shrijal.tictactoe.ui.theme.*
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
@@ -52,9 +60,9 @@ fun TicTacToeGameOfflineMultiplayer() {
                         }
                         winner = ""
                         showDialog = false
-                    }
+                    },
                 ) {
-                    Text("Reset")
+                    Text("Play Again")
                 }
             },
             dismissButton = {
@@ -69,47 +77,27 @@ fun TicTacToeGameOfflineMultiplayer() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.LightGray)
-            .padding(16.dp),
+            .background(Primary)
+            .padding(vertical = 50.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            Text(
-                text = "Player 1: $wincountplayer1",
-                fontSize = 22.sp
-            )
-            Text(
-                text = "Player 2: $wincountplayer2",
-                fontSize = 22.sp
-            )
-            Text(
-                text = "Draws: $drawCount", // Display draw count
-                fontSize = 22.sp
-            )
-        }
-        Spacer(
-            modifier = Modifier
-                .height(40.dp)
-        )
 
+        //Logo Design
+        Text(
+            text = "Tic-Tac-Toe",
+            style = TextStyle(
+                fontFamily = montserrat,
+                fontWeight = FontWeight(800),
+                fontSize = 40.sp,
+                color = Color.White,
+            )
+        )
+        Spacer(modifier = Modifier.height(50.dp))
         // Display current Player when X
-        if (currentPlayer == "X") {
-            Text(
-                text = "Current Player: $currentPlayer",
-                fontSize = 24.sp,
-                modifier = Modifier.height(30.dp)
-            )
-        } else {
-            Text(
-                text = "",
-                fontSize = 24.sp,
-                modifier = Modifier.height(30.dp)
-            )
+        when (currentPlayer == "X") {
+            true -> CurrentPlayerText(currentPlayer = currentPlayer)
+            false -> CurrentPlayerText(currentPlayer = "")
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -118,10 +106,15 @@ fun TicTacToeGameOfflineMultiplayer() {
         for (i in 0..2) {
             Row {
                 for (j in 0..2) {
+                    val scale by animateFloatAsState(
+                        targetValue = if (board[i][j].isNotEmpty()) 1f else 0f,
+                        animationSpec = tween(durationMillis = 300)
+                    )
                     Box(
                         modifier = Modifier
                             .size(100.dp)
-                            .background(Color.White)
+                            .clip(shape = RoundedCornerShape(10.dp))
+                            .background(Deactivated)
                             .clickable {
                                 if (board[i][j].isEmpty() && winner.isEmpty()) {
                                     board[i][j] = currentPlayer
@@ -133,7 +126,8 @@ fun TicTacToeGameOfflineMultiplayer() {
                                             } else {
                                                 wincountplayer2++
                                             }
-                                            dialogMessage = "Player ${if (winningPlayer == "X") 1 else 2} Wins!"
+                                            dialogMessage =
+                                                "Player ${if (winningPlayer == "X") 1 else 2} Wins!"
                                             showDialog = true
                                         },
                                         onDraw = {
@@ -144,51 +138,112 @@ fun TicTacToeGameOfflineMultiplayer() {
                                     )
                                 }
                             },
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = board[i][j],
-                            fontSize = 50.sp,
-                            color = if (board[i][j] == "X") Color.Red else Color.Blue
-                        )
+                        if (board[i][j].isNotEmpty()) {
+                            Text(
+                                text = board[i][j],
+                                style = TextStyle(
+                                    fontFamily = montserrat,
+                                    fontWeight = FontWeight(600),
+                                    fontSize = 60.sp,
+                                ),
+                                modifier = Modifier.scale(scale),
+                                color = if (board[i][j] == "X") Secondary else Tertiary
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.size(2.dp))
+                    Spacer(modifier = Modifier.size(5.dp))
                 }
             }
-            Spacer(modifier = Modifier.size(2.dp))
+            Spacer(modifier = Modifier.size(5.dp))
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Display current Player when X
-        if (currentPlayer != "X") {
+        // Display current Player when O
+        when (currentPlayer != "X") {
+            true -> CurrentPlayerText(currentPlayer = currentPlayer)
+            false -> CurrentPlayerText(currentPlayer = "")
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        //Scoreboard
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(.9f)
+                .fillMaxHeight(.3f),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ){
+                Text(
+                    text = "Player 1: $wincountplayer1",
+                    style = TextStyle(
+                        fontFamily = montserrat,
+                        fontWeight = FontWeight(400),
+                        fontSize = 18.sp,
+                        color = Color.White,
+                    )
+                )
+                Text(
+                    text = "Player 2: $wincountplayer2",
+                    style = TextStyle(
+                        fontFamily = montserrat,
+                        fontWeight = FontWeight(400),
+                        fontSize = 18.sp,
+                        color = Color.White,
+                    )
+                )
+            }
             Text(
-                text = "Current Player: $currentPlayer",
-                fontSize = 24.sp,
-                modifier = Modifier.height(30.dp))
-        } else {
-            Text(
-                text = "",
-                fontSize = 24.sp,
-                modifier = Modifier.height(30.dp)
+                text = "Draws: $drawCount", // Display draw count
+                style = TextStyle(
+                    fontFamily = montserrat,
+                    fontWeight = FontWeight(400),
+                    fontSize = 18.sp,
+                    color = Color.White,
+                )
             )
         }
+        Spacer(
+            modifier = Modifier
+                .height(60.dp)
+        )
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Reset button
-        Button(onClick = {
-            reset(board, player1, player2, emptyCells) {
-                newActiveUser ->
-                activeUser = newActiveUser
-            }
-            winner = ""
-            showDialog = false
-        }) {
-            Text("Reset")
+        // End Game Button
+        Button(
+            onClick = {
+                exitProcess(1)
+                //Need to change
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Secondary
+            ),
+            modifier = Modifier
+                .width(50.dp)
+                .height(50.dp),
+        ) {
+            Text(
+                text = "X",
+                style = TextStyle(
+                    fontFamily = montserrat,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight(600),
+                    color = Primary
+                ),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
+
+
 
 @Preview
 @Composable
