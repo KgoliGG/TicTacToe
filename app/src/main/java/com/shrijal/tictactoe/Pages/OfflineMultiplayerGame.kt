@@ -1,4 +1,4 @@
-package com.shrijal.tictactoe
+package com.shrijal.tictactoe.Pages
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -14,8 +14,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import com.shrijal.tictactoe.checkWinner
 import com.shrijal.tictactoe.composable.CurrentPlayerText
 import com.shrijal.tictactoe.composable.Scoreboard
+import com.shrijal.tictactoe.reset
 import com.shrijal.tictactoe.ui.theme.*
 import kotlin.random.Random
 import kotlin.system.exitProcess
