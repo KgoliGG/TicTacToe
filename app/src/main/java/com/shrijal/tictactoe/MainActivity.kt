@@ -3,8 +3,8 @@ package com.shrijal.tictactoe
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.shrijal.tictactoe.Pages.Menu
-import com.shrijal.tictactoe.Pages.TicTacToeGameOfflineMultiplayer
+import androidx.navigation.compose.rememberNavController
+import com.shrijal.tictactoe.navigation.AppNavigation
 import com.shrijal.tictactoe.ui.theme.TicTacToeTheme
 
 
@@ -13,8 +13,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             TicTacToeTheme  {
-                Menu()
-//                TicTacToeGameOfflineMultiplayer()
+                val navController = rememberNavController()
+                AppNavigation(navController = navController)
             }
         }
     }

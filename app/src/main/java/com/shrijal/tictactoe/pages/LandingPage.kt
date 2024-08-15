@@ -1,4 +1,4 @@
-package com.shrijal.tictactoe.Pages
+package com.shrijal.tictactoe.pages
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,10 +11,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.shrijal.tictactoe.navigation.Screens
 import com.shrijal.tictactoe.ui.theme.*
 
 @Composable
-fun Menu(){
+fun LandingPage(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -99,8 +102,8 @@ fun Menu(){
                 .height(50.dp)
                 .fillMaxWidth(.6f),
             onClick = {
-                /*TODO*/
-            }
+                navController.navigate(Screens.OfflineMultiplayerGame.name)
+            },
         ) {
             Text(
                 text = "Local Multiplayer",
@@ -165,5 +168,5 @@ fun Menu(){
 @Preview
 @Composable
 fun MenuPreview() {
-    Menu()
+    LandingPage(rememberNavController())
 }

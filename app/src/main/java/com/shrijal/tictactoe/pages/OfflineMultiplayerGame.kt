@@ -1,4 +1,4 @@
-package com.shrijal.tictactoe.Pages
+package com.shrijal.tictactoe.pages
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -9,21 +9,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.shrijal.tictactoe.checkWinner
 import com.shrijal.tictactoe.composable.CurrentPlayerText
 import com.shrijal.tictactoe.composable.Scoreboard
+import com.shrijal.tictactoe.navigation.Screens
 import com.shrijal.tictactoe.reset
 import com.shrijal.tictactoe.ui.theme.*
 import kotlin.random.Random
-import kotlin.system.exitProcess
 
 @Composable
-fun TicTacToeGameOfflineMultiplayer() {
+fun OfflineMultiplayerGame(navController: NavController) {
     var board by remember { mutableStateOf(Array(3) { Array(3) { "" } }) }
     var currentPlayer by remember { mutableStateOf("X") }
     var winner by remember { mutableStateOf("") }
@@ -64,13 +67,44 @@ fun TicTacToeGameOfflineMultiplayer() {
                         winner = ""
                         showDialog = false
                     },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Secondary
+                    ),
+//                    modifier = Modifier
+//                        .width(150.dp),
                 ) {
-                    Text("Play Again")
+                    Text(
+                        text = "Play Again",
+                        style = TextStyle(
+                            fontFamily = montserrat,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight(600),
+                            color = Primary
+                        ),
+                    )
                 }
             },
             dismissButton = {
-                Button(onClick = { exitProcess(1) }) {
-                    Text("Exit")
+                Button(onClick = {
+                    navController.navigate(
+                        route = Screens.LandingPage.name
+                    )
+                },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Tertiary
+                    ),
+//                    modifier = Modifier
+//                        .width(150.dp),
+                ) {
+                    Text(
+                        text = "Exit",
+                        style = TextStyle(
+                            fontFamily = montserrat,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight(600),
+                            color = Primary
+                        ),
+                    )
                 }
             }
         )
@@ -124,13 +158,19 @@ fun TicTacToeGameOfflineMultiplayer() {
                 for (j in 0..2) {
                     val scale by animateFloatAsState(
                         targetValue = if (board[i][j].isNotEmpty()) 1f else 0f,
-                        animationSpec = tween(durationMillis = 300)
+                        animationSpec = tween(durationMillis = 300), label = ""
                     )
                     Box(
                         modifier = Modifier
                             .size(100.dp)
                             .clip(shape = RoundedCornerShape(10.dp))
                             .background(
+//                                Image(
+//                                    painter = painterResource(id = R.drawable.logo_mark),
+//                                    contentDescription = null,
+//                                    Modifier
+//                                        .size(105.dp, 175.dp)
+//                                )
                                 color = when (board[i][j]) {
                                     "X" -> SecondaryActivated
                                     "O" -> TertiaryActivated
@@ -189,7 +229,7 @@ fun TicTacToeGameOfflineMultiplayer() {
             false -> CurrentPlayerText(currentPlayer = "")
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         //Scoreboard
         Scoreboard(wincountplayer1 = wincountplayer1, wincountplayer2 = wincountplayer2, drawCount = drawCount)
@@ -201,8 +241,9 @@ fun TicTacToeGameOfflineMultiplayer() {
         // End Game Button
         Button(
             onClick = {
-                exitProcess(1)
-                //Need to change
+                navController.navigate(
+                    route = Screens.LandingPage.name
+                )
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Secondary
@@ -230,5 +271,5 @@ fun TicTacToeGameOfflineMultiplayer() {
 @Preview
 @Composable
 fun OfflineMultiplayerPreview() {
-    TicTacToeGameOfflineMultiplayer()
+    OfflineMultiplayerGame(rememberNavController())
 }
