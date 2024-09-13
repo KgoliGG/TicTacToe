@@ -30,10 +30,12 @@ import com.shrijal.tictactoe.navigation.Screens
 import com.shrijal.tictactoe.ui.theme.*
 import com.shrijal.tictactoe.reset
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 @Composable
 fun MachineLearningModel(navController: NavController) {
+    val scope = rememberCoroutineScope()
     var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) } // Use CharArray for board
     var currentPlayer by remember { mutableStateOf(if (Random.nextBoolean()) 'X' else 'O') }
     var winner by remember { mutableStateOf("") }
@@ -58,6 +60,7 @@ fun MachineLearningModel(navController: NavController) {
         onPlayAgain = {
             resetGameTrigger = true
             showDialog = false
+
         },
         onExit = {
             navController.navigate(route = Screens.LandingPage.name)
@@ -80,15 +83,44 @@ fun MachineLearningModel(navController: NavController) {
             reset(board, player1, player2, emptyCells) { newActiveUser ->
                 activeUser = newActiveUser
                 currentPlayer = if (Random.nextBoolean()) 'X' else 'O'
-                if (currentPlayer == 'O') {
-                    val move = findBestMove(board)
-                    board[move.row][move.col] = 'O'
-                    currentPlayer = 'X'
-                }
             }
-            delay(1000)
+            if (currentPlayer == 'O') {
+                delay(1000)
+                val move = findBestMove(board)
+                board[move.row][move.col] = 'O'
+                currentPlayer = 'X'
+            }
             winner = ""
             resetGameTrigger = false
+        }
+    }
+
+    // Function to handle AI move with delay
+    fun makeAIMove() {
+        scope.launch {
+            delay(1000) // 1-second delay for AI's move
+            val bestMove = findBestMove(board)
+            board[bestMove.row][bestMove.col] = 'O'
+            winner = checkWinner(
+                board,
+                onWin = { winningPlayer ->
+                    dialogMessage = "Player $winningPlayer Wins!"
+                    if (winningPlayer == "O") {
+                        wincountPlayer2++
+                    }
+                    else if (winningPlayer == "X") {
+                        wincountPlayer1++
+                    }
+                    showDialog = true
+                },
+                onDraw = {
+                    dialogMessage = "It's a Draw!"
+                    drawCount++
+                    showDialog = true
+                }
+            )
+            currentPlayer = 'X'
+
         }
     }
 
@@ -177,27 +209,7 @@ fun MachineLearningModel(navController: NavController) {
 
                                         // Let AI make a move if it's O's turn
                                         if (currentPlayer == 'O') {
-                                            val bestMove = findBestMove(board)
-                                            board[bestMove.row][bestMove.col] = 'O'
-                                            winner = checkWinner(
-                                                board,
-                                                onWin = { winningPlayer ->
-                                                    dialogMessage = "Player $winningPlayer Wins!"
-                                                    if (winningPlayer == "O") {
-                                                        wincountPlayer2++
-                                                    }
-                                                    else if (winningPlayer == "X") {
-                                                        wincountPlayer1++
-                                                    }
-                                                    showDialog = true
-                                                },
-                                                onDraw = {
-                                                    dialogMessage = "It's a Draw!"
-                                                    drawCount++
-                                                    showDialog = true
-                                                }
-                                            )
-                                            currentPlayer = 'X'
+                                            makeAIMove()
                                         }
                                     }
                                 }
