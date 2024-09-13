@@ -29,12 +29,13 @@ import com.shrijal.tictactoe.dialogs.ShowDialogBox
 import com.shrijal.tictactoe.navigation.Screens
 import com.shrijal.tictactoe.ui.theme.*
 import com.shrijal.tictactoe.reset
+import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 @Composable
 fun MachineLearningModel(navController: NavController) {
     var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) } // Use CharArray for board
-    var currentPlayer by remember { mutableStateOf('X') }
+    var currentPlayer by remember { mutableStateOf(if (Random.nextBoolean()) 'X' else 'O') }
     var winner by remember { mutableStateOf("") }
     var wincountPlayer1 by remember { mutableIntStateOf(0) }
     var wincountPlayer2 by remember { mutableIntStateOf(0) }
@@ -45,6 +46,7 @@ fun MachineLearningModel(navController: NavController) {
     var emptyCells by remember { mutableStateOf(arrayListOf<Int>()) }
     var showDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
+    var resetGameTrigger by remember { mutableStateOf(false) }
 
     // Show dialog when the game ends
     ShowDialogBox(
@@ -54,16 +56,41 @@ fun MachineLearningModel(navController: NavController) {
             showDialog = false
         },
         onPlayAgain = {
-            reset(board, player1, player2, emptyCells) { newActiveUser ->
-                activeUser = newActiveUser
-            }
-            winner = ""
+            resetGameTrigger = true
             showDialog = false
         },
         onExit = {
             navController.navigate(route = Screens.LandingPage.name)
         }
     )
+
+    // Automatically make the first move if the model starts
+    LaunchedEffect(currentPlayer) {
+        if (currentPlayer == 'O') {
+            delay(1000) // 1-second delay for AI move
+            val move = findBestMove(board)
+            board[move.row][move.col] = 'O'
+            currentPlayer = 'X'
+        }
+    }
+
+    // LaunchedEffect to reset the game
+    LaunchedEffect(resetGameTrigger) {
+        if (resetGameTrigger) {
+            reset(board, player1, player2, emptyCells) { newActiveUser ->
+                activeUser = newActiveUser
+                currentPlayer = if (Random.nextBoolean()) 'X' else 'O'
+                if (currentPlayer == 'O') {
+                    val move = findBestMove(board)
+                    board[move.row][move.col] = 'O'
+                    currentPlayer = 'X'
+                }
+            }
+            delay(1000)
+            winner = ""
+            resetGameTrigger = false
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -133,7 +160,8 @@ fun MachineLearningModel(navController: NavController) {
                                             dialogMessage = "Player $winningPlayer Wins!"
                                             if (winningPlayer == "X") {
                                                 wincountPlayer1++
-                                            } else if (winningPlayer == "O") {
+                                            }
+                                            else if (winningPlayer == "O") {
                                                 wincountPlayer2++
                                             }
                                             showDialog = true
@@ -158,6 +186,9 @@ fun MachineLearningModel(navController: NavController) {
                                                     if (winningPlayer == "O") {
                                                         wincountPlayer2++
                                                     }
+                                                    else if (winningPlayer == "X") {
+                                                        wincountPlayer1++
+                                                    }
                                                     showDialog = true
                                                 },
                                                 onDraw = {
@@ -166,7 +197,7 @@ fun MachineLearningModel(navController: NavController) {
                                                     showDialog = true
                                                 }
                                             )
-                                            currentPlayer = 'X' // Switch back to player
+                                            currentPlayer = 'X'
                                         }
                                     }
                                 }
