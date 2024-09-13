@@ -16,7 +16,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.shrijal.tictactoe.IN_PROGRESS
 import com.shrijal.tictactoe.checkWinner
 import com.shrijal.tictactoe.composable.CurrentPlayerText
 import com.shrijal.tictactoe.composable.ReturntoMainMenu
@@ -31,14 +30,14 @@ import kotlin.random.Random
 fun OfflineMultiplayerGame(navController: NavController) {
     var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) } // Use CharArray for board
     var currentPlayer by remember { mutableStateOf('X') }
-    var winner by remember { mutableStateOf(IN_PROGRESS) }
+    var winner by remember { mutableStateOf("") }
     var wincountPlayer1 by remember { mutableIntStateOf(0) }
     var wincountPlayer2 by remember { mutableIntStateOf(0) }
+    var drawCount by remember { mutableIntStateOf(0) }
     var activeUser by remember { mutableIntStateOf(Random.nextInt(1, 3)) }
     var player1 by remember { mutableStateOf(arrayListOf<Int>()) }
     var player2 by remember { mutableStateOf(arrayListOf<Int>()) }
     var emptyCells by remember { mutableStateOf(arrayListOf<Int>()) }
-    var drawCount by remember { mutableIntStateOf(0) }
     var showDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
 
@@ -54,7 +53,7 @@ fun OfflineMultiplayerGame(navController: NavController) {
             reset(board, player1, player2, emptyCells) { newActiveUser ->
                 activeUser = newActiveUser
             }
-            winner = IN_PROGRESS
+            winner = ""
             showDialog = false
         },
         onExit = {
@@ -97,7 +96,7 @@ fun OfflineMultiplayerGame(navController: NavController) {
 
         Spacer(modifier = Modifier.height(50.dp))
         // Display current Player when X
-        when (currentPlayer == IN_PROGRESS) {
+        when (currentPlayer == 'X' ) {
             true -> CurrentPlayerText(currentPlayer = currentPlayer.toString())
             false -> CurrentPlayerText(currentPlayer = "")
         }
@@ -130,23 +129,24 @@ fun OfflineMultiplayerGame(navController: NavController) {
                                 }
                             )
                             .clickable {
-                                if (board[i][j] == ' ' && winner == IN_PROGRESS) {
+                                if (board[i][j] == ' ' && winner.isEmpty()) {
                                     board[i][j] = currentPlayer
-                                    winner = checkWinner(
-                                        board,
+                                    currentPlayer = if (currentPlayer == 'X') 'O' else 'X'
+                                    winner = checkWinner(board,
                                         onWin = { winningPlayer ->
-                                            dialogMessage = "Player $winningPlayer Wins!"
-                                            if (winningPlayer == 'X') {
+                                            if (winningPlayer == "X") {
                                                 wincountPlayer1++
                                             } else {
                                                 wincountPlayer2++
                                             }
+                                            dialogMessage =
+                                                "Player ${if (winningPlayer == "X") 1 else 2} Wins!"
                                             showDialog = true
                                         },
                                         onDraw = {
                                             dialogMessage = "It's a Draw!"
-                                            drawCount++
                                             showDialog = true
+                                            drawCount++
                                         }
                                     )
                                 }
@@ -175,9 +175,8 @@ fun OfflineMultiplayerGame(navController: NavController) {
         Spacer(modifier = Modifier.height(20.dp))
 
         // Display current Player when O
-        when (currentPlayer != IN_PROGRESS) {
-            true -> CurrentPlayerText(currentPlayer = currentPlayer.toString())
-            false -> CurrentPlayerText(currentPlayer = "")
+        if (currentPlayer == 'O') {
+            CurrentPlayerText(currentPlayer = currentPlayer.toString())
         }
 
         Spacer(modifier = Modifier.height(30.dp))

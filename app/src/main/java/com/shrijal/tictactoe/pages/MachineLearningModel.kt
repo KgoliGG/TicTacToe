@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.shrijal.tictactoe.IN_PROGRESS
 import com.shrijal.tictactoe.models.findBestMove
 import com.shrijal.tictactoe.checkWinner
 import com.shrijal.tictactoe.composable.CurrentPlayerText
@@ -36,14 +35,14 @@ import kotlin.random.Random
 fun MachineLearningModel(navController: NavController) {
     var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) } // Use CharArray for board
     var currentPlayer by remember { mutableStateOf('X') }
-    var winner by remember { mutableStateOf(IN_PROGRESS) }
+    var winner by remember { mutableStateOf("") }
     var wincountPlayer1 by remember { mutableIntStateOf(0) }
     var wincountPlayer2 by remember { mutableIntStateOf(0) }
+    var drawCount by remember { mutableIntStateOf(0) }
     var activeUser by remember { mutableIntStateOf(Random.nextInt(1, 3)) }
     var player1 by remember { mutableStateOf(arrayListOf<Int>()) }
     var player2 by remember { mutableStateOf(arrayListOf<Int>()) }
     var emptyCells by remember { mutableStateOf(arrayListOf<Int>()) }
-    var drawCount by remember { mutableIntStateOf(0) }
     var showDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
 
@@ -58,7 +57,7 @@ fun MachineLearningModel(navController: NavController) {
             reset(board, player1, player2, emptyCells) { newActiveUser ->
                 activeUser = newActiveUser
             }
-            winner = IN_PROGRESS
+            winner = ""
             showDialog = false
         },
         onExit = {
@@ -87,7 +86,7 @@ fun MachineLearningModel(navController: NavController) {
         )
 
         Text(
-            text = "Offline Multiplayer".uppercase(),
+            text = "Trained with MinMax Algorithm".uppercase(),
             style = TextStyle(
                 fontFamily = montserrat,
                 fontWeight = FontWeight(400),
@@ -99,8 +98,8 @@ fun MachineLearningModel(navController: NavController) {
 
         Spacer(modifier = Modifier.height(50.dp))
 
-        // Display current player text
-        if (winner == IN_PROGRESS) {
+        // Display current Player when X
+        if (currentPlayer == 'X') {
             CurrentPlayerText(currentPlayer = currentPlayer.toString())
         }
 
@@ -126,15 +125,15 @@ fun MachineLearningModel(navController: NavController) {
                                 }
                             )
                             .clickable {
-                                if (board[i][j] == ' ' && winner == IN_PROGRESS) {
+                                if (board[i][j] == ' ' && winner.isEmpty()) {
                                     board[i][j] = currentPlayer
                                     winner = checkWinner(
                                         board,
                                         onWin = { winningPlayer ->
                                             dialogMessage = "Player $winningPlayer Wins!"
-                                            if (winningPlayer == 'X') {
+                                            if (winningPlayer == "X") {
                                                 wincountPlayer1++
-                                            } else {
+                                            } else if (winningPlayer == "O") {
                                                 wincountPlayer2++
                                             }
                                             showDialog = true
@@ -145,7 +144,7 @@ fun MachineLearningModel(navController: NavController) {
                                             showDialog = true
                                         }
                                     )
-                                    if (winner == IN_PROGRESS) {
+                                    if (winner.isEmpty()) {
                                         currentPlayer = if (currentPlayer == 'X') 'O' else 'X'
 
                                         // Let AI make a move if it's O's turn
@@ -156,7 +155,9 @@ fun MachineLearningModel(navController: NavController) {
                                                 board,
                                                 onWin = { winningPlayer ->
                                                     dialogMessage = "Player $winningPlayer Wins!"
-                                                    wincountPlayer2++
+                                                    if (winningPlayer == "O") {
+                                                        wincountPlayer2++
+                                                    }
                                                     showDialog = true
                                                 },
                                                 onDraw = {
@@ -192,10 +193,10 @@ fun MachineLearningModel(navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(20.dp))
+
         // Display current Player when O
-        when (currentPlayer != IN_PROGRESS) {
-            true -> CurrentPlayerText(currentPlayer = currentPlayer.toString())
-            false -> CurrentPlayerText(currentPlayer = "")
+        if (currentPlayer == 'O') {
+            CurrentPlayerText(currentPlayer = currentPlayer.toString())
         }
 
         Spacer(modifier = Modifier.height(30.dp))
