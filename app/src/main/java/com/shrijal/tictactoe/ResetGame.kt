@@ -4,21 +4,30 @@ import kotlin.random.Random
 
 //Reset the board
 fun reset(
-    board: Array<Array<String>>,
+    board: Array<CharArray>,
     player1: ArrayList<Int>,
     player2: ArrayList<Int>,
     emptyCells: ArrayList<Int>,
-    activeUserSetter: (Int) -> Unit // Pass a function to set activeUser
+    onResetActiveUser: (newActiveUser: Int) -> Unit
 ) {
-    // Reset the board, but don't clear the win counts
-    for (i in 0..2) {
-        for (j in 0..2) {
-            board[i][j] = ""
+    // Clear the board by setting all cells to ' ' (empty space)
+    for (i in board.indices) {
+        for (j in board[i].indices) {
+            board[i][j] = ' ' // Reset to space, not empty string
         }
     }
+
+    // Clear player moves
     player1.clear()
     player2.clear()
+
+    // Reinitialize the list of empty cells
     emptyCells.clear()
-    // Randomly select the first player for the new game
-    activeUserSetter(Random.nextInt(1, 3))
+    for (i in 0 until 9) {
+        emptyCells.add(i)
+    }
+
+    // Randomly set the first player (1 for X, 2 for O)
+    val newActiveUser = Random.nextInt(1, 3)
+    onResetActiveUser(newActiveUser)
 }

@@ -18,13 +18,13 @@ fun AppNavigation(
             LandingPage(navController = navController)
         }
         composable(Screens.MachineLearningModel.name) {
-            /*ToDo*/
+            MachineLearningModel(navController = navController)
         }
         composable(route = Screens.OfflineMultiplayerGame.name) {
             OfflineMultiplayerGame(navController = navController)
         }
         composable(Screens.OnlineMultiplayerGame.name) {
-            /*ToDo*/
+//            OnlineMultiplayerGame(navController = navController)
         }
-        }
+    }
 }
