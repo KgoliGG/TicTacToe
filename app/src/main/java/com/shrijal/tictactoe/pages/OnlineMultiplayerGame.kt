@@ -24,8 +24,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.*
+import com.shrijal.tictactoe.composable.ReturntoMainMenu
 import com.shrijal.tictactoe.firebase.*
 import com.shrijal.tictactoe.ui.theme.Primary
+import com.shrijal.tictactoe.ui.theme.Tertiary
 import com.shrijal.tictactoe.ui.theme.TertiaryActivated
 import com.shrijal.tictactoe.ui.theme.montserrat
 import kotlinx.coroutines.*
@@ -126,6 +128,17 @@ fun OnlineMultiplayerUI(navController: NavController) {
         )
         Spacer(modifier = Modifier.height(100.dp))
 
+        if (errorMessage.isNotEmpty()) {
+            Spacer(
+                modifier = Modifier.
+                height(16.dp)
+            )
+            Text(
+                text = errorMessage,
+                color = Tertiary
+            )
+        }
+
         if (isLoading) {
             CircularProgressIndicator()
         } else {
@@ -207,11 +220,13 @@ fun OnlineMultiplayerUI(navController: NavController) {
                     ),
                     textAlign = TextAlign.Center)
             }
-        }
+            Spacer(
+                modifier = Modifier
+                    .height(50.dp)
+            )
 
-        if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = errorMessage, color = Color.Red)
+            // End Game Button
+            ReturntoMainMenu(navController = navController)
         }
     }
 }
