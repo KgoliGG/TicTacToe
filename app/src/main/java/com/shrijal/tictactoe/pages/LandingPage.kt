@@ -72,6 +72,7 @@ fun LandingPage(navController: NavController) {
                 .height(250.dp)
         )
 
+        //Machine Learning Model
         Button(
             colors = ButtonDefaults.buttonColors(
                 containerColor = Primary
@@ -111,6 +112,7 @@ fun LandingPage(navController: NavController) {
                 .height(10.dp)
         )
 
+        //Offline Multi-Player Mode
         Button(
             colors = ButtonDefaults.buttonColors(
                 containerColor = Primary
@@ -148,6 +150,7 @@ fun LandingPage(navController: NavController) {
                 .height(10.dp)
         )
 
+        //Online Multi-Player Mode
         Button(
             colors = ButtonDefaults.buttonColors(
                 containerColor = Primary
@@ -165,6 +168,7 @@ fun LandingPage(navController: NavController) {
                 ),
             onClick = {
                 navController.navigate(Screens.OnlineMultiplayerGame.name)
+
             }
         ) {
             Text(
@@ -183,7 +187,9 @@ fun LandingPage(navController: NavController) {
             modifier = Modifier
                 .height(100.dp)
         )
-        
+
+        //Exit Button
+
         Button(
             onClick = {
                 exitProcess(1)

@@ -1,7 +1,6 @@
 package com.shrijal.tictactoe.pages
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,8 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,15 +19,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.shrijal.tictactoe.models.findBestMove
-import com.shrijal.tictactoe.checkWinner
-import com.shrijal.tictactoe.composable.CurrentPlayerText
-import com.shrijal.tictactoe.composable.ReturntoMainMenu
-import com.shrijal.tictactoe.composable.Scoreboard
+import com.shrijal.tictactoe.models.*
+import com.shrijal.tictactoe.composable.checkWinner
+import com.shrijal.tictactoe.composable.*
 import com.shrijal.tictactoe.dialogs.ShowDialogBox
 import com.shrijal.tictactoe.navigation.Screens
 import com.shrijal.tictactoe.ui.theme.*
-import com.shrijal.tictactoe.reset
+import com.shrijal.tictactoe.composable.reset
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -36,7 +33,10 @@ import kotlin.random.Random
 @Composable
 fun MachineLearningModel(navController: NavController) {
     val scope = rememberCoroutineScope()
-    var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) } // Use CharArray for board
+    val context = LocalContext.current
+    var isAIMoving by remember { mutableStateOf(false) }
+    var qTable by remember { mutableStateOf(loadQTable(context)) }
+    var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) }
     var currentPlayer by remember { mutableStateOf(if (Random.nextBoolean()) 'X' else 'O') }
     var winner by remember { mutableStateOf("") }
     var wincountPlayer1 by remember { mutableIntStateOf(0) }
@@ -60,9 +60,9 @@ fun MachineLearningModel(navController: NavController) {
         onPlayAgain = {
             resetGameTrigger = true
             showDialog = false
-
         },
         onExit = {
+            saveQTable(context, qTable) // Save Q-table before exiting
             navController.navigate(route = Screens.LandingPage.name)
         }
     )
@@ -71,8 +71,9 @@ fun MachineLearningModel(navController: NavController) {
     LaunchedEffect(currentPlayer) {
         if (currentPlayer == 'O') {
             delay(1000) // 1-second delay for AI move
-            val move = findBestMove(board)
+            val move = chooseAction(board, qTable)
             board[move.row][move.col] = 'O'
+            isAIMoving = false
             currentPlayer = 'X'
         }
     }
@@ -82,12 +83,13 @@ fun MachineLearningModel(navController: NavController) {
         if (resetGameTrigger) {
             reset(board, player1, player2, emptyCells) { newActiveUser ->
                 activeUser = newActiveUser
-                currentPlayer = if (Random.nextBoolean()) 'X' else 'O'
             }
+            currentPlayer = if (Random.nextBoolean()) 'X' else 'O'
             if (currentPlayer == 'O') {
                 delay(1000)
-                val move = findBestMove(board)
+                val move = chooseAction(board, qTable)
                 board[move.row][move.col] = 'O'
+                isAIMoving = false
                 currentPlayer = 'X'
             }
             winner = ""
@@ -98,8 +100,8 @@ fun MachineLearningModel(navController: NavController) {
     // Function to handle AI move with delay
     fun makeAIMove() {
         scope.launch {
-            delay(1000) // 1-second delay for AI's move
-            val bestMove = findBestMove(board)
+//            delay(1000) // 1-second delay for AI's move
+            val bestMove = chooseAction(board, qTable)
             board[bestMove.row][bestMove.col] = 'O'
             winner = checkWinner(
                 board,
@@ -107,20 +109,54 @@ fun MachineLearningModel(navController: NavController) {
                     dialogMessage = "Player $winningPlayer Wins!"
                     if (winningPlayer == "O") {
                         wincountPlayer2++
-                    }
-                    else if (winningPlayer == "X") {
+                    } else if (winningPlayer == "X") {
                         wincountPlayer1++
                     }
+                    updateQValues(qTable, board, "lose") // Update Q-values for AI losing
                     showDialog = true
                 },
                 onDraw = {
                     dialogMessage = "It's a Draw!"
                     drawCount++
+                    updateQValues(qTable, board, "draw") // Update Q-values for a draw
                     showDialog = true
                 }
             )
+            isAIMoving = false
             currentPlayer = 'X'
+        }
+    }
 
+    // Function to handle player's move
+    fun handlePlayerMove(row: Int, col: Int) {
+        if (board[row][col] == ' ' && winner.isEmpty()) {
+            board[row][col] = currentPlayer
+            winner = checkWinner(
+                board,
+                onWin = { winningPlayer ->
+                    dialogMessage = "Player $winningPlayer Wins!"
+                    if (winningPlayer == "X") {
+                        wincountPlayer1++
+                    } else if (winningPlayer == "O") {
+                        wincountPlayer2++
+                    }
+                    updateQValues(qTable, board, "win") // Update Q-values for AI winning
+                    showDialog = true
+                },
+                onDraw = {
+                    dialogMessage = "It's a Draw!"
+                    drawCount++
+                    updateQValues(qTable, board, "draw") // Update Q-values for a draw
+                    showDialog = true
+                }
+            )
+            if (winner.isEmpty()) {
+                currentPlayer = if (currentPlayer == 'X') 'O' else 'X'
+                if (currentPlayer == 'O' && !isAIMoving) {
+                    isAIMoving = true // Indicate AI is making a move
+                    makeAIMove()
+                }
+            }
         }
     }
 
@@ -132,7 +168,6 @@ fun MachineLearningModel(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
         // Game Title
         Text(
             text = "Tic-Tac-Toe",
@@ -145,7 +180,7 @@ fun MachineLearningModel(navController: NavController) {
         )
 
         Text(
-            text = "Trained with MinMax Algorithm".uppercase(),
+            text = "Trained with Q-Learning Algorithm".uppercase(),
             style = TextStyle(
                 fontFamily = montserrat,
                 fontWeight = FontWeight(400),
@@ -157,10 +192,8 @@ fun MachineLearningModel(navController: NavController) {
 
         Spacer(modifier = Modifier.height(50.dp))
 
-        // Display current Player when X
-        if (currentPlayer == 'X') {
-            CurrentPlayerText(currentPlayer = currentPlayer.toString())
-        }
+        // Display current Player
+        CurrentPlayerText(currentPlayer = currentPlayer.toString())
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -168,10 +201,6 @@ fun MachineLearningModel(navController: NavController) {
         for (i in 0..2) {
             Row {
                 for (j in 0..2) {
-                    val scale by animateFloatAsState(
-                        targetValue = if (board[i][j] != ' ') 1f else 0f,
-                        animationSpec = tween(durationMillis = 300), label = ""
-                    )
                     Box(
                         modifier = Modifier
                             .size(100.dp)
@@ -183,37 +212,7 @@ fun MachineLearningModel(navController: NavController) {
                                     else -> Deactivated
                                 }
                             )
-                            .clickable {
-                                if (board[i][j] == ' ' && winner.isEmpty()) {
-                                    board[i][j] = currentPlayer
-                                    winner = checkWinner(
-                                        board,
-                                        onWin = { winningPlayer ->
-                                            dialogMessage = "Player $winningPlayer Wins!"
-                                            if (winningPlayer == "X") {
-                                                wincountPlayer1++
-                                            }
-                                            else if (winningPlayer == "O") {
-                                                wincountPlayer2++
-                                            }
-                                            showDialog = true
-                                        },
-                                        onDraw = {
-                                            dialogMessage = "It's a Draw!"
-                                            drawCount++
-                                            showDialog = true
-                                        }
-                                    )
-                                    if (winner.isEmpty()) {
-                                        currentPlayer = if (currentPlayer == 'X') 'O' else 'X'
-
-                                        // Let AI make a move if it's O's turn
-                                        if (currentPlayer == 'O') {
-                                            makeAIMove()
-                                        }
-                                    }
-                                }
-                            },
+                            .clickable { handlePlayerMove(i, j) },
                         contentAlignment = Alignment.Center,
                     ) {
                         if (board[i][j] != ' ') {
@@ -224,7 +223,6 @@ fun MachineLearningModel(navController: NavController) {
                                     fontWeight = FontWeight(600),
                                     fontSize = 60.sp,
                                 ),
-                                modifier = Modifier.scale(scale),
                                 color = if (board[i][j] == 'X') Secondary else Tertiary
                             )
                         }
@@ -236,13 +234,6 @@ fun MachineLearningModel(navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-
-        // Display current Player when O
-        if (currentPlayer == 'O') {
-            CurrentPlayerText(currentPlayer = currentPlayer.toString())
-        }
-
-        Spacer(modifier = Modifier.height(30.dp))
 
         // Scoreboard
         Scoreboard(
@@ -256,7 +247,15 @@ fun MachineLearningModel(navController: NavController) {
         // End game button
         ReturntoMainMenu(navController = navController)
     }
+
+    // Save Q-table when the game ends
+    DisposableEffect(Unit) {
+        onDispose {
+            saveQTable(context, qTable)
+        }
+    }
 }
+
 
 @Preview
 @Composable

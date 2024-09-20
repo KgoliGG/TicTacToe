@@ -1,4 +1,4 @@
-package com.shrijal.tictactoe
+package com.shrijal.tictactoe.composable
 
 import kotlin.random.Random
 

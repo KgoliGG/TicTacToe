@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.google.firebase.crashlytics)
 }
 
+
 android {
     namespace = "com.shrijal.tictactoe"
     compileSdk = 34
@@ -74,6 +75,9 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.database.ktx)
     implementation(libs.firebase.database)
+    implementation(libs.gson)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.auth)
     testImplementation(libs.junit)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
@@ -83,4 +87,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
 }

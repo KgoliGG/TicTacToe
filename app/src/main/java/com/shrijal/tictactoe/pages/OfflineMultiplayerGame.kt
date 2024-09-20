@@ -1,5 +1,8 @@
 package com.shrijal.tictactoe.pages
 
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -16,18 +19,28 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.shrijal.tictactoe.checkWinner
+import com.shrijal.tictactoe.composable.checkWinner
 import com.shrijal.tictactoe.composable.CurrentPlayerText
 import com.shrijal.tictactoe.composable.ReturntoMainMenu
 import com.shrijal.tictactoe.composable.Scoreboard
 import com.shrijal.tictactoe.dialogs.ShowDialogBox
 import com.shrijal.tictactoe.navigation.Screens
-import com.shrijal.tictactoe.reset
+import com.shrijal.tictactoe.composable.reset
 import com.shrijal.tictactoe.ui.theme.*
 import kotlin.random.Random
 
+class OfflineMultiplayerGame : ComponentActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            OfflineMultiplayer(rememberNavController())
+        }
+    }
+}
+
 @Composable
-fun OfflineMultiplayerGame(navController: NavController) {
+fun OfflineMultiplayer(navController: NavController) {
     var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) } // Use CharArray for board
     var currentPlayer by remember { mutableStateOf('X') }
     var winner by remember { mutableStateOf("") }
@@ -203,5 +216,5 @@ fun OfflineMultiplayerGame(navController: NavController) {
 @Preview
 @Composable
 fun OfflineMultiplayerPreview() {
-    OfflineMultiplayerGame(rememberNavController())
+    OfflineMultiplayer(rememberNavController())
 }

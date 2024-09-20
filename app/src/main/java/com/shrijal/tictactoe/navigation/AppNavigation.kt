@@ -21,10 +21,10 @@ fun AppNavigation(
             MachineLearningModel(navController = navController)
         }
         composable(route = Screens.OfflineMultiplayerGame.name) {
-            OfflineMultiplayerGame(navController = navController)
+            OfflineMultiplayer(navController = navController)
         }
-        composable(Screens.OnlineMultiplayerGame.name) {
-//            OnlineMultiplayerGame(navController = navController)
+        composable(route = Screens.OnlineMultiplayerGame.name){
+            OnlineMultiplayerUI(navController = navController)
         }
     }
 }

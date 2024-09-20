@@ -1,19 +1,20 @@
 package com.shrijal.tictactoe.models
 
+import android.content.Context
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlin.random.Random
-import kotlin.math.max
-import kotlin.math.min
 
 // Data class to represent a move
 data class Move(val row: Int, val col: Int)
 
-// Q-Table for storing Q-values
-val qTable = mutableMapOf<List<CharArray>, MutableMap<Pair<Int, Int>, Double>>()
+// Typealias for Q-table
+typealias QTable = MutableMap<String, MutableMap<String, Float>>
 
 // Learning parameters
-const val alpha = 0.1  // Learning rate
-const val gamma = 0.9  // Discount factor
-const val epsilon = 0.2  // Exploration rate
+const val alpha = 1f  // Learning rate
+const val gamma = 1f  // Discount factor
+const val epsilon = 10  // Exploration rate
 
 // Function to evaluate the board state
 fun evaluate(board: Array<CharArray>): Int {
@@ -57,42 +58,26 @@ fun isMovesLeft(board: Array<CharArray>): Boolean {
     return false
 }
 
-// Minimax function with Q-learning integration
-fun minimax(board: Array<CharArray>, depth: Int, isMaximizing: Boolean): Int {
-    val score = evaluate(board)
-    if (score == 10) return score - depth // Prioritize faster wins
-    if (score == -10) return score + depth // Prioritize slower losses
-    if (!isMovesLeft(board)) return 0
-
-    return if (isMaximizing) {
-        var best = Int.MIN_VALUE
-        for (i in 0..2) {
-            for (j in 0..2) {
-                if (board[i][j] == ' ') {
-                    board[i][j] = 'X'
-                    best = max(best, minimax(board, depth + 1, false))
-                    board[i][j] = ' '
-                }
-            }
-        }
-        best
-    } else {
-        var best = Int.MAX_VALUE
-        for (i in 0..2) {
-            for (j in 0..2) {
-                if (board[i][j] == ' ') {
-                    board[i][j] = 'O'
-                    best = min(best, minimax(board, depth + 1, true))
-                    board[i][j] = ' '
-                }
-            }
-        }
-        best
-    }
+// Function to convert board to a string for Q-table key
+fun boardToString(board: Array<CharArray>): String {
+    return board.joinToString(separator = "") { it.joinToString(separator = "") }
 }
 
-// Function to choose the best action based on Q-learning
-fun chooseAction(board: Array<CharArray>, isMaximizing: Boolean): Move {
+// Function to initialize Q-values for available moves
+fun initializeMoves(board: Array<CharArray>): MutableMap<String, Float> {
+    val moves = mutableMapOf<String, Float>()
+    for (i in 0..2) {
+        for (j in 0..2) {
+            if (board[i][j] == ' ') {
+                moves["$i,$j"] = 0f // Initialize Q-values for each move
+            }
+        }
+    }
+    return moves
+}
+
+// Function to choose action based on Q-learning (epsilon-greedy)
+fun chooseAction(board: Array<CharArray>, qTable: QTable): Move {
     val availableActions = mutableListOf<Move>()
     for (i in 0..2) {
         for (j in 0..2) {
@@ -102,36 +87,72 @@ fun chooseAction(board: Array<CharArray>, isMaximizing: Boolean): Move {
         }
     }
 
-    if (Random.nextDouble() < epsilon) {
+    return if (Random.nextDouble() < epsilon) {
         // Explore: Choose a random move
-        return availableActions[Random.nextInt(availableActions.size)]
+        availableActions[Random.nextInt(availableActions.size)]
     } else {
-        // Exploit: Choose the best move
+        // Exploit: Choose the best move based on Q-table
         var bestMove = availableActions[0]
-        var bestQValue = Double.MIN_VALUE
+        var bestQValue = Float.MIN_VALUE
         for (action in availableActions) {
-            val qValue = qTable[board.toList()]?.get(action.row to action.col) ?: 0.0
+            val actionKey = "${action.row},${action.col}"
+            val qValue = qTable[boardToString(board)]?.get(actionKey) ?: 0f
             if (qValue > bestQValue) {
                 bestQValue = qValue
                 bestMove = action
             }
         }
-        return bestMove
+        bestMove
     }
 }
 
-// Function to update Q-table with the result of a game
-fun updateQTable(board: Array<CharArray>, action: Move, reward: Double) {
-    val stateKey = board.toList()
-    val oldQValue = qTable[stateKey]?.get(action.row to action.col) ?: 0.0
-    val maxFutureQValue = qTable[stateKey]?.values?.maxOrNull() ?: 0.0
-    val newQValue = oldQValue + alpha * (reward + gamma * maxFutureQValue - oldQValue)
+// Function to find the best move using Q-table
+fun findBestMove(board: Array<CharArray>, qTable: QTable): Move {
+    val state = boardToString(board)
+    val moves = qTable[state] ?: initializeMoves(board)
 
-    // Update Q-table
-    qTable.getOrPut(stateKey) { mutableMapOf() }[action.row to action.col] = newQValue
+    // Pick the move with the highest Q-value
+    val bestAction = moves.maxByOrNull { it.value }?.key ?: "${0},${0}"
+    val parts = bestAction.split(",")
+    return Move(parts[0].toInt(), parts[1].toInt())
 }
 
-// Function to find the best move considering Q-learning
-fun findBestMove(board: Array<CharArray>): Move {
-    return chooseAction(board, isMaximizing = true)
+// Function to update Q-values based on game result
+fun updateQValues(qTable: QTable, board: Array<CharArray>, result: String) {
+    val state = boardToString(board)
+    val moves = qTable[state] ?: return
+
+    val reward = when (result) {
+        "win" -> 1f  // AI wins
+        "lose" -> -1f  // AI loses
+        "draw" -> 0f  // Draw
+        else -> 0f
+    }
+
+    // Update Q-values using the Q-learning formula
+    moves.forEach { (action, qValue) ->
+        val newQValue = qValue + alpha * (reward - qValue)
+        moves[action] = newQValue
+    }
+}
+
+// Function to save Q-table to SharedPreferences
+fun saveQTable(context: Context, qTable: QTable) {
+    val sharedPref = context.getSharedPreferences("QTable", Context.MODE_PRIVATE)
+    val editor = sharedPref.edit()
+    val json = Gson().toJson(qTable)
+    editor.putString("qTable", json)
+    editor.apply()
+}
+
+// Function to load Q-table from SharedPreferences
+fun loadQTable(context: Context): QTable {
+    val sharedPref = context.getSharedPreferences("QTable", Context.MODE_PRIVATE)
+    val json = sharedPref.getString("QTable", null)
+    return if (json != null) {
+        val type = object : TypeToken<MutableMap<String, MutableMap<String, Float>>>() {}.type
+        Gson().fromJson(json, type)
+    } else {
+        mutableMapOf()
+    }
 }
