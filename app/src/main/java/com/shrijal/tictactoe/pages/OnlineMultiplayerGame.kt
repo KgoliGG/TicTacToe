@@ -32,6 +32,19 @@ import com.shrijal.tictactoe.ui.theme.TertiaryActivated
 import com.shrijal.tictactoe.ui.theme.montserrat
 import kotlinx.coroutines.*
 
+
+class OnlineeMultiplayerGame : ComponentActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true)
+        setContent {
+            OnlineMultiplayerUI(rememberNavController())
+        }
+    }
+}
+
+
 @Composable
 fun OnlineMultiplayerUI(navController: NavController) {
     var code by remember { mutableStateOf(TextFieldValue("")) }
