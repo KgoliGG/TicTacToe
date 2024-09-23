@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,7 +29,6 @@ import com.shrijal.tictactoe.ui.theme.Primary
 import com.shrijal.tictactoe.ui.theme.Tertiary
 import com.shrijal.tictactoe.ui.theme.TertiaryActivated
 import com.shrijal.tictactoe.ui.theme.montserrat
-import kotlinx.coroutines.*
 
 
 class OnlineeMultiplayerGame : ComponentActivity() {
