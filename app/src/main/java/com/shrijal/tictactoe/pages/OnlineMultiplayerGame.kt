@@ -3,14 +3,12 @@ package com.shrijal.tictactoe.pages
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -18,20 +16,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.*
 import com.shrijal.tictactoe.composable.ReturntoMainMenu
 import com.shrijal.tictactoe.firebase.*
-import com.shrijal.tictactoe.ui.theme.Primary
-import com.shrijal.tictactoe.ui.theme.Tertiary
-import com.shrijal.tictactoe.ui.theme.TertiaryActivated
-import com.shrijal.tictactoe.ui.theme.montserrat
+import com.shrijal.tictactoe.ui.theme.*
 
 
-class OnlineeMultiplayerGame : ComponentActivity() {
+class OnlineMultiplayerGame : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,7 +97,12 @@ fun OnlineMultiplayerUI(navController: NavController) {
                 letterSpacing = 2.sp,
             )
         )
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(
+            modifier = Modifier
+                .height(8.dp)
+        )
+
         OutlinedTextField(
             value = code,
             onValueChange = { code = it },
@@ -137,13 +136,19 @@ fun OnlineMultiplayerUI(navController: NavController) {
                 )
             }
         )
-        Spacer(modifier = Modifier.height(100.dp))
+
+        Spacer(
+            modifier = Modifier
+                .height(100.dp)
+        )
 
         if (errorMessage.isNotEmpty()) {
+
             Spacer(
                 modifier = Modifier.
                 height(16.dp)
             )
+
             Text(
                 text = errorMessage,
                 color = Tertiary
@@ -152,7 +157,9 @@ fun OnlineMultiplayerUI(navController: NavController) {
 
         if (isLoading) {
             CircularProgressIndicator()
-        } else {
+        }
+
+        else {
             Button(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Primary
@@ -169,18 +176,21 @@ fun OnlineMultiplayerUI(navController: NavController) {
                         shape = RoundedCornerShape(100.dp)
                     ),
                 onClick = {
-                        isCodeMaker = true
+                    isCodeMaker = true
                     isLoading = true
-                    createGameCode(database, code.text, onError = {
-                        isLoading = false
-                        errorMessage = it
-                    },
+                    createGameCode(
+                        database,
+                        code.text,
+                        onError = {
+                            isLoading = false
+                            errorMessage = it
+                                  },
                         onSuccess = {
                             isLoading = false
                             errorMessage = "Game code created successfully!"
                         }
                     )
-                    }
+                }
             ) {
                 Text(
                     text = "Create Game",
@@ -193,7 +203,10 @@ fun OnlineMultiplayerUI(navController: NavController) {
                     textAlign = TextAlign.Center)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+            )
 
             Button(
                 colors = ButtonDefaults.buttonColors(
@@ -209,18 +222,24 @@ fun OnlineMultiplayerUI(navController: NavController) {
                         1.dp,
                         color = TertiaryActivated,
                         shape = RoundedCornerShape(100.dp)
-                    ),
+                    ), 
                 onClick = {
-                isCodeMaker = false
-                isLoading = true
-                joinGameCode(database, code.text, onError = {
-                    isLoading = false
-                    errorMessage = it
-                }, onSuccess = {
-                    isLoading = false
-                    errorMessage = "Joined the game successfully!"
-                })
-            }) {
+                    isCodeMaker = false
+                    isLoading = true
+                    joinGameCode(
+                        database,
+                        code.text,
+                        onError = {
+                            isLoading = false
+                            errorMessage = it
+                                  },
+                        onSuccess = {
+                            isLoading = false
+                            errorMessage = "Joined the game successfully!"
+                        }
+                    )
+                }
+            ) {
                 Text(
                     text = "Join Game",
                     style = TextStyle(
@@ -231,13 +250,16 @@ fun OnlineMultiplayerUI(navController: NavController) {
                     ),
                     textAlign = TextAlign.Center)
             }
+
             Spacer(
                 modifier = Modifier
                     .height(50.dp)
             )
 
             // End Game Button
-            ReturntoMainMenu(navController = navController)
+            ReturntoMainMenu(
+                navController = navController
+            )
         }
     }
 }
@@ -245,5 +267,7 @@ fun OnlineMultiplayerUI(navController: NavController) {
 @Preview
 @Composable
 fun OnlineMultiplayerUIPreview(){
-    OnlineMultiplayerUI(rememberNavController())
+    OnlineMultiplayerUI(
+        rememberNavController()
+    )
 }

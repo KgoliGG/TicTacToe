@@ -215,5 +215,7 @@ fun OfflineMultiplayer(navController: NavController) {
 @Preview
 @Composable
 fun OfflineMultiplayerPreview() {
-    OfflineMultiplayer(rememberNavController())
+    OfflineMultiplayer(
+        rememberNavController()
+    )
 }
