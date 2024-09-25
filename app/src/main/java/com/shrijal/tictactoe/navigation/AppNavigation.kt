@@ -24,7 +24,10 @@ fun AppNavigation(
             OfflineMultiplayer(navController = navController)
         }
         composable(route = Screens.OnlineMultiplayerGame.name){
-            OnlineMultiplayerUI(navController = navController)
+            OnlineMultiplayerGame(navController = navController)
+        }
+        composable(route = Screens.GameRoomManagement.name){
+            GameRoomManagement(navController = navController)
         }
     }
 }

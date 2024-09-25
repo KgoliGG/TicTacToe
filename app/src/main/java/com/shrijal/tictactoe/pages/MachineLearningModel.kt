@@ -100,7 +100,7 @@ fun MachineLearningModel(navController: NavController) {
     // Function to handle AI move with delay
     fun makeAIMove() {
         scope.launch {
-//            delay(1000) // 1-second delay for AI's move
+            delay(1000) // 1-second delay for AI's move
             val bestMove = chooseAction(board, qTable)
             board[bestMove.row][bestMove.col] = 'O'
             winner = checkWinner(

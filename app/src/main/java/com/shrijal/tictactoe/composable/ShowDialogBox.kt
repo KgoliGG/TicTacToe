@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.*
 import com.shrijal.tictactoe.ui.theme.*
 
 @Composable
-fun ShowDialogBox(
+fun  ShowDialogBox(
     showDialog: Boolean,
     dialogMessage: String,
     onDismiss: () -> Unit,

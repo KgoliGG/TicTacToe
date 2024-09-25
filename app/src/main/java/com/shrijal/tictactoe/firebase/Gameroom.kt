@@ -51,34 +51,33 @@ fun joinGameCode(
     database: DatabaseReference,
     code: String,
     onError: (String) -> Unit,
-    onSuccess: () -> Unit
+    onSuccess: () -> Unit,
+    onRoomFull: () -> Unit
 ) {
     if (code.isEmpty()) {
-        onError("Enter a valid code!")
+        onError("Please enter a valid room code!")
         return
     }
 
-    //Join Log
-    println("Attempting to join code: $code")
-
-    database.addListenerForSingleValueEvent(object : ValueEventListener {
+    val roomRef = database.child(code)
+    roomRef.child("players").addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
-            val codeExists = snapshot.children.any { it.value == code }
-            if (codeExists) {
-                //Join Validation Log
-                println("Game Room available")
-                onSuccess()
+            val playerCount = snapshot.getValue(Int::class.java) ?: 0
+            if (playerCount >= 2) {
+                onRoomFull()
             } else {
-                //Join Validation Log
-                println("Invalid game code!")
-                onError("Invalid game code!")
+                roomRef.child("players").setValue(playerCount + 1).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        onSuccess()
+                    } else {
+                        onError(task.exception?.message ?: "Failed to join room")
+                    }
+                }
             }
         }
 
         override fun onCancelled(error: DatabaseError) {
-            //Join Cancellation Log
-            println("Error joining game!")
-            onError("Error joining game!")
+            onError(error.message)
         }
     })
 }
