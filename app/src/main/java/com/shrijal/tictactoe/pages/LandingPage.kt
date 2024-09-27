@@ -18,6 +18,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.shrijal.tictactoe.composable.GameModeTitle
+import com.shrijal.tictactoe.composable.GameTitle
 import com.shrijal.tictactoe.navigation.Screens
 import com.shrijal.tictactoe.ui.theme.*
 import kotlin.system.exitProcess
@@ -36,40 +38,23 @@ fun LandingPage(navController: NavController) {
 //                    endY = Float.POSITIVE_INFINITY
 //                )
             )
-            .padding(16.dp),
+            .padding(vertical = 50.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
         Spacer(
             modifier = Modifier
-                .height(100.dp)
+                .height(50.dp)
         )
 
-        Text(
-            text = "Tic-Tac-Toe",
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontWeight = FontWeight(800),
-                fontSize = 50.sp,
-                color = Color.White,
-            )
-        )
+        // Game UI Design
+        GameTitle()
 
-        Text(
-            text = "Machine Learning Model".uppercase(),
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontWeight = FontWeight(400),
-                fontSize = 16.sp,
-                color = Color.White,
-                letterSpacing = 2.sp,
-
-                )
-        )
+        GameModeTitle(text = "Machine Learning Model")
 
         Spacer(
             modifier = Modifier
-                .height(250.dp)
+                .weight(.1f)
         )
 
         //Machine Learning Model

@@ -1,11 +1,11 @@
 package com.shrijal.tictactoe.pages
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -22,6 +23,8 @@ import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.FirebaseDatabase
+import com.shrijal.tictactoe.composable.GameModeTitle
+import com.shrijal.tictactoe.composable.GameTitle
 import com.shrijal.tictactoe.composable.ReturntoMainMenu
 import com.shrijal.tictactoe.firebase.createGameCode
 import com.shrijal.tictactoe.firebase.joinGameCode
@@ -49,7 +52,9 @@ fun GameRoomManagement(navController: NavController){
     var errorMessage by remember { mutableStateOf("") }
     val database = FirebaseDatabase.getInstance().reference.child("codes")
 
-
+    // Use LocalContext inside a Composable context
+    val context = LocalContext.current
+    var showToast by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -58,43 +63,32 @@ fun GameRoomManagement(navController: NavController){
             .padding(vertical = 50.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
-    ){
+    ) {
 
-        Text(
-            text = "Tic-Tac-Toe",
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontWeight = FontWeight(800),
-                fontSize = 40.sp,
-                color = Color.White,
-            )
+        Spacer(
+            modifier = Modifier
+                .height(50.dp)
         )
 
-        Text(
-            text = "Online Multiplayer".uppercase(),
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontWeight = FontWeight(400),
-                fontSize = 16.sp,
-                color = Color.White,
-                letterSpacing = 2.sp,
+        // Game UI Design
+        GameTitle()
 
-                )
-        )
+        GameModeTitle(text = "Online Multiplayer Game")
+
         Spacer(
             modifier = Modifier
                 .weight(1f)
         )
+
         Column(
             modifier = Modifier
                 .fillMaxWidth(.6f),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Center
-        ){
+        ) {
             Text(
                 text = "Enter a Username",
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 style = TextStyle(
                     fontFamily = montserrat,
                     fontWeight = FontWeight(400),
@@ -105,32 +99,15 @@ fun GameRoomManagement(navController: NavController){
                 )
             )
 
-            Spacer(
-                modifier = Modifier
-                    .height(2.dp)
-            )
+            Spacer(modifier = Modifier.height(2.dp))
 
-            //Textfield to enter Username
+            // Textfield to enter Username
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
                 shape = RoundedCornerShape(100.dp),
-                modifier = Modifier
-                    .fillMaxWidth(),
-//                label ={
-//                    Text(
-//                        text = "Username",
-//                        style = TextStyle(
-//                            fontFamily = montserrat,
-//                            fontWeight = FontWeight(400),
-//                            fontSize = 16.sp,
-//                            color = Color.White,
-//                            letterSpacing = 2.sp,
-//                            textAlign = TextAlign.Center
-//                        )
-//                    )
-//                },
-                placeholder ={
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
                     Text(
                         text = "User",
                         style = TextStyle(
@@ -145,15 +122,11 @@ fun GameRoomManagement(navController: NavController){
                 }
             )
 
-            Spacer(
-                modifier = Modifier
-                    .height(20.dp)
-            )
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = "Enter Room Code",
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 style = TextStyle(
                     fontFamily = montserrat,
                     fontWeight = FontWeight(400),
@@ -164,32 +137,15 @@ fun GameRoomManagement(navController: NavController){
                 )
             )
 
-            Spacer(
-                modifier = Modifier
-                    .height(2.dp)
-            )
+            Spacer(modifier = Modifier.height(2.dp))
 
-            //TextField to enter Room Code
+            // TextField to enter Room Code
             OutlinedTextField(
                 value = code,
                 onValueChange = { code = it },
                 shape = RoundedCornerShape(100.dp),
-                modifier = Modifier
-                    .fillMaxWidth(),
-//                label ={
-//                    Text(
-//                        text = "Enter Room Code \"XXX-XXX\"",
-//                        style = TextStyle(
-//                            fontFamily = montserrat,
-//                            fontWeight = FontWeight(400),
-//                            fontSize = 16.sp,
-//                            color = Color.White,
-//                            letterSpacing = 2.sp,
-//                            textAlign = TextAlign.Center
-//                        )
-//                    )
-//                },
-                placeholder ={
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
                     Text(
                         text = "XXXX",
                         style = TextStyle(
@@ -204,44 +160,22 @@ fun GameRoomManagement(navController: NavController){
                 }
             )
 
-            Spacer(
-                modifier = Modifier
-                    .height(10.dp)
-            )
+            Spacer(modifier = Modifier.height(10.dp))
 
-            //Error Messagea
+            // Error Message
             if (errorMessage.isNotEmpty()) {
-
-                Spacer(
-                    modifier = Modifier.
-                    height(16.dp)
-                )
-
-                Text(
-                    text = errorMessage,
-                    color = Tertiary
-                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = errorMessage, color = Tertiary)
             }
 
-            Spacer(
-                modifier = Modifier
-                    .height(10.dp)
-            )
+            Spacer(modifier = Modifier.height(10.dp))
 
-            //Create Game
+            // Create Game
             Button(
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Primary
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = Primary),
                 modifier = Modifier
-                    .clip(
-                        shape = RoundedCornerShape(100.dp)
-                    )
-                    .border(
-                        1.dp,
-                        color = TertiaryActivated,
-                        shape = RoundedCornerShape(100.dp)
-                    )
+                    .clip(RoundedCornerShape(100.dp))
+                    .border(1.dp, TertiaryActivated, RoundedCornerShape(100.dp))
                     .height(50.dp)
                     .fillMaxWidth(),
                 onClick = {
@@ -249,15 +183,11 @@ fun GameRoomManagement(navController: NavController){
                         database,
                         username.text,
                         code.text,
-                        onError = {
-                            errorMessage = it
-                        },
-                        onSuccess = {
-                            errorMessage = "Joined Successfully"
-                        }
+                        onError = { errorMessage = it },
+                        onSuccess = { showToast = "Room Created and Joined Successfully" }
                     )
                 }
-            ){
+            ) {
                 Text(
                     text = "Create Game",
                     style = TextStyle(
@@ -270,24 +200,14 @@ fun GameRoomManagement(navController: NavController){
                 )
             }
 
-            Spacer(
-                modifier = Modifier
-                    .height(10.dp)
-            )
-            //Join Game
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Join Game
             Button(
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Primary
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = Primary),
                 modifier = Modifier
-                    .clip(
-                        shape = RoundedCornerShape(100.dp)
-                    )
-                    .border(
-                        1.dp,
-                        color = TertiaryActivated,
-                        shape = RoundedCornerShape(100.dp)
-                    )
+                    .clip(RoundedCornerShape(100.dp))
+                    .border(1.dp, TertiaryActivated, RoundedCornerShape(100.dp))
                     .height(50.dp)
                     .fillMaxWidth(),
                 onClick = {
@@ -295,23 +215,13 @@ fun GameRoomManagement(navController: NavController){
                         database,
                         username.text,
                         code.text,
-                        onError = {
-                            errorMessage = it
-                        },
-                        onSuccess = {
-                            errorMessage = "Joined Successfully"
-                        },
-                        onRoomFull = {
-                            errorMessage = "Room is full!"
-                        },
-                        onReconnectionAllowed = {
-                            errorMessage = "Reconnected Successfully"
-                        }
+                        onError = { errorMessage = it },
+                        onSuccess = { showToast = "Joined Successfully!" },
+                        onRoomFull = { errorMessage = "Room is full!" },
+                        onReconnectionAllowed = { showToast = "Reconnected to the game successfully" }
                     )
-
                 }
-
-            ){
+            ) {
                 Text(
                     text = "Join Game",
                     style = TextStyle(
@@ -325,17 +235,21 @@ fun GameRoomManagement(navController: NavController){
             }
         }
 
-        Spacer(
-            modifier = Modifier
-                .height(50.dp)
-        )
+        Spacer(modifier = Modifier.height(50.dp))
 
-        //Return to Main Menu
-        ReturntoMainMenu(
-            navController = navController
-        )
+        // Return to Main Menu
+        ReturntoMainMenu(navController = navController)
+    }
+
+    // Show Toast when reconnection is allowed
+    showToast?.let {
+        LaunchedEffect(it) {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            showToast = null // Reset the message after showing toast
+        }
     }
 }
+
 
 @Preview
 @Composable

@@ -118,10 +118,9 @@ fun findBestMove(board: Array<CharArray>, qTable: QTable): Move {
 }
 
 // Function to update Q-values based on game result
-fun updateQValues(qTable: QTable, board: Array<CharArray>, result: String) {
+fun updateQValues(qTable: QTable, board: Array<CharArray>, result: String, lastAction: Move?) {
     val state = boardToString(board)
     val moves = qTable[state] ?: return
-
     val reward = when (result) {
         "win" -> 1f  // AI wins
         "lose" -> -1f  // AI loses
@@ -130,11 +129,15 @@ fun updateQValues(qTable: QTable, board: Array<CharArray>, result: String) {
     }
 
     // Update Q-values using the Q-learning formula
-    moves.forEach { (action, qValue) ->
+    lastAction?.let { action ->
+        val actionKey = "${action.row},${action.col}"
+        val qValue = moves[actionKey] ?: 0f
+        // Calculate the new Q-value
         val newQValue = qValue + alpha * (reward - qValue)
-        moves[action] = newQValue
+        moves[actionKey] = newQValue
     }
 }
+
 
 // Function to save Q-table to SharedPreferences
 fun saveQTable(context: Context, qTable: QTable) {
@@ -156,3 +159,5 @@ fun loadQTable(context: Context): QTable {
         mutableMapOf()
     }
 }
+
+

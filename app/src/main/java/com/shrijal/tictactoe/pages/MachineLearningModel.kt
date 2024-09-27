@@ -104,22 +104,24 @@ fun MachineLearningModel(navController: NavController) {
             delay(1000) // 1-second delay for AI's move
             val bestMove = chooseAction(board, qTable)
             board[bestMove.row][bestMove.col] = 'O'
+            val lastAction = bestMove // Store the last action
             winner = checkWinner(
                 board,
                 onWin = { winningPlayer ->
                     dialogMessage = "Player $winningPlayer Wins!"
                     if (winningPlayer == "O") {
                         wincountPlayer2++
-                    } else if (winningPlayer == "X") {
+                        updateQValues(qTable, board, "lose", lastAction) // Update Q-values for AI losing
+                    } else {
                         wincountPlayer1++
+                        updateQValues(qTable, board, "win", lastAction) // Update Q-values for AI winning
                     }
-                    updateQValues(qTable, board, "lose") // Update Q-values for AI losing
                     showDialog = true
                 },
                 onDraw = {
                     dialogMessage = "It's a Draw!"
                     drawCount++
-                    updateQValues(qTable, board, "draw") // Update Q-values for a draw
+                    updateQValues(qTable, board, "draw", lastAction) // Update Q-values for a draw
                     showDialog = true
                 }
             )
@@ -138,16 +140,17 @@ fun MachineLearningModel(navController: NavController) {
                     dialogMessage = "Player $winningPlayer Wins!"
                     if (winningPlayer == "X") {
                         wincountPlayer1++
+                        updateQValues(qTable, board, "win", null) // Update Q-values for AI winning
                     } else if (winningPlayer == "O") {
                         wincountPlayer2++
+                        updateQValues(qTable, board, "lose", null) // Update Q-values for AI losing
                     }
-                    updateQValues(qTable, board, "win") // Update Q-values for AI winning
                     showDialog = true
                 },
                 onDraw = {
                     dialogMessage = "It's a Draw!"
                     drawCount++
-                    updateQValues(qTable, board, "draw") // Update Q-values for a draw
+                    updateQValues(qTable, board, "draw", null) // Update Q-values for a draw
                     showDialog = true
                 }
             )
@@ -161,6 +164,7 @@ fun MachineLearningModel(navController: NavController) {
         }
     }
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -169,28 +173,15 @@ fun MachineLearningModel(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Game Title
-        Text(
-            text = "Tic-Tac-Toe",
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontWeight = FontWeight(800),
-                fontSize = 40.sp,
-                color = Color.White,
-            )
+        Spacer(
+            modifier = Modifier
+                .height(50.dp)
         )
 
-        Text(
-            text = "Trained with Q-Learning Algorithm".uppercase(),
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontWeight = FontWeight(400),
-                fontSize = 16.sp,
-                color = Color.White,
-                letterSpacing = 2.sp,
-                textAlign = TextAlign.Center
-            )
-        )
+        // Game UI Design
+        GameTitle()
+
+        GameModeTitle(text = "Trained with Q-Learning Algorithm")
 
         Spacer(modifier = Modifier.height(50.dp))
 

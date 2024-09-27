@@ -20,6 +20,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.shrijal.tictactoe.composable.checkWinner
 import com.shrijal.tictactoe.composable.CurrentPlayerText
+import com.shrijal.tictactoe.composable.GameModeTitle
+import com.shrijal.tictactoe.composable.GameTitle
 import com.shrijal.tictactoe.composable.ReturntoMainMenu
 import com.shrijal.tictactoe.composable.Scoreboard
 import com.shrijal.tictactoe.dialogs.ShowDialogBox
@@ -83,28 +85,15 @@ fun OfflineMultiplayer(navController: NavController) {
         verticalArrangement = Arrangement.Center
     ) {
 
-        //Game Text Design
-        Text(
-            text = "Tic-Tac-Toe",
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontWeight = FontWeight(800),
-                fontSize = 40.sp,
-                color = Color.White,
-            )
+        Spacer(
+            modifier = Modifier
+                .height(50.dp)
         )
 
-        Text(
-            text = "Offline Multiplayer".uppercase(),
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontWeight = FontWeight(400),
-                fontSize = 16.sp,
-                color = Color.White,
-                letterSpacing = 2.sp,
+        // Game UI Design
+        GameTitle()
 
-            )
-        )
+        GameModeTitle(text = "Offline Multiplayer")
 
         Spacer(modifier = Modifier.height(50.dp))
         // Display current Player when X
