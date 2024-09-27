@@ -5,27 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -33,11 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.shrijal.tictactoe.composable.ReturntoMainMenu
 import com.shrijal.tictactoe.firebase.createGameCode
@@ -60,12 +43,13 @@ class OnlineMultiplayerGameRoomManagement : ComponentActivity() {
 
 
 @Composable
-fun GameRoomManagement(navController: NavController) {
+fun GameRoomManagement(navController: NavController){
+    var username by remember { mutableStateOf(TextFieldValue("")) }
     var code by remember { mutableStateOf(TextFieldValue("")) }
-    var isLoading by remember { mutableStateOf(false) }
-    var isCodeMaker by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
     val database = FirebaseDatabase.getInstance().reference.child("codes")
+
+
 
     Column(
         modifier = Modifier
@@ -74,14 +58,8 @@ fun GameRoomManagement(navController: NavController) {
             .padding(vertical = 50.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
-    ) {
+    ){
 
-        Spacer(
-            modifier = Modifier
-                .height(100.dp)
-        )
-
-        //Game Text Design
         Text(
             text = "Tic-Tac-Toe",
             style = TextStyle(
@@ -103,92 +81,159 @@ fun GameRoomManagement(navController: NavController) {
 
                 )
         )
-
         Spacer(
             modifier = Modifier
-                .height(100.dp)
+                .weight(1f)
         )
-
-        Text(
-            text = "Enter Game Code",
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontWeight = FontWeight(400),
-                fontSize = 16.sp,
-                color = Color.White,
-                letterSpacing = 2.sp,
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(.6f),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Center
+        ){
+            Text(
+                text = "Enter a Username",
+                modifier = Modifier
+                    .fillMaxWidth(),
+                style = TextStyle(
+                    fontFamily = montserrat,
+                    fontWeight = FontWeight(400),
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    letterSpacing = 2.sp,
+                    textAlign = TextAlign.Center
+                )
             )
-        )
-
-        Spacer(
-            modifier = Modifier
-                .height(8.dp)
-        )
-
-        OutlinedTextField(
-            value = code,
-            onValueChange = { code = it },
-            modifier = Modifier
-                .fillMaxWidth(.6f)
-                .padding(16.dp),
-            label ={
-                Text(
-                    text = "XXX-XXX",
-                    style = TextStyle(
-                        fontFamily = montserrat,
-                        fontWeight = FontWeight(400),
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        letterSpacing = 2.sp,
-                        textAlign = TextAlign.Center
-                    )
-                )
-            },
-            placeholder ={
-                Text(
-                    text = "",
-                    style = TextStyle(
-                        fontFamily = montserrat,
-                        fontWeight = FontWeight(600),
-                        fontSize = 24.sp,
-                        color = Color.White,
-                        letterSpacing = 2.sp,
-                        textAlign = TextAlign.Center
-                    )
-                )
-            }
-        )
-
-        Spacer(
-            modifier = Modifier
-                .height(100.dp)
-        )
-
-        if (errorMessage.isNotEmpty()) {
 
             Spacer(
-                modifier = Modifier.
-                height(16.dp)
+                modifier = Modifier
+                    .height(2.dp)
+            )
+
+            //Textfield to enter Username
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                shape = RoundedCornerShape(100.dp),
+                modifier = Modifier
+                    .fillMaxWidth(),
+//                label ={
+//                    Text(
+//                        text = "Username",
+//                        style = TextStyle(
+//                            fontFamily = montserrat,
+//                            fontWeight = FontWeight(400),
+//                            fontSize = 16.sp,
+//                            color = Color.White,
+//                            letterSpacing = 2.sp,
+//                            textAlign = TextAlign.Center
+//                        )
+//                    )
+//                },
+                placeholder ={
+                    Text(
+                        text = "User",
+                        style = TextStyle(
+                            fontFamily = montserrat,
+                            fontWeight = FontWeight(400),
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            letterSpacing = 2.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    )
+                }
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .height(20.dp)
             )
 
             Text(
-                text = errorMessage,
-                color = Tertiary
+                text = "Enter Room Code",
+                modifier = Modifier
+                    .fillMaxWidth(),
+                style = TextStyle(
+                    fontFamily = montserrat,
+                    fontWeight = FontWeight(400),
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    letterSpacing = 2.sp,
+                    textAlign = TextAlign.Center
+                )
             )
-        }
 
-        if (isLoading) {
-            CircularProgressIndicator()
-        }
+            Spacer(
+                modifier = Modifier
+                    .height(2.dp)
+            )
 
-        else {
+            //TextField to enter Room Code
+            OutlinedTextField(
+                value = code,
+                onValueChange = { code = it },
+                shape = RoundedCornerShape(100.dp),
+                modifier = Modifier
+                    .fillMaxWidth(),
+//                label ={
+//                    Text(
+//                        text = "Enter Room Code \"XXX-XXX\"",
+//                        style = TextStyle(
+//                            fontFamily = montserrat,
+//                            fontWeight = FontWeight(400),
+//                            fontSize = 16.sp,
+//                            color = Color.White,
+//                            letterSpacing = 2.sp,
+//                            textAlign = TextAlign.Center
+//                        )
+//                    )
+//                },
+                placeholder ={
+                    Text(
+                        text = "XXXX",
+                        style = TextStyle(
+                            fontFamily = montserrat,
+                            fontWeight = FontWeight(400),
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            letterSpacing = 2.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    )
+                }
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .height(10.dp)
+            )
+
+            //Error Messagea
+            if (errorMessage.isNotEmpty()) {
+
+                Spacer(
+                    modifier = Modifier.
+                    height(16.dp)
+                )
+
+                Text(
+                    text = errorMessage,
+                    color = Tertiary
+                )
+            }
+
+            Spacer(
+                modifier = Modifier
+                    .height(10.dp)
+            )
+
+            //Create Game
             Button(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Primary
                 ),
                 modifier = Modifier
-                    .height(50.dp)
-                    .fillMaxWidth(.6f)
                     .clip(
                         shape = RoundedCornerShape(100.dp)
                     )
@@ -196,24 +241,23 @@ fun GameRoomManagement(navController: NavController) {
                         1.dp,
                         color = TertiaryActivated,
                         shape = RoundedCornerShape(100.dp)
-                    ),
+                    )
+                    .height(50.dp)
+                    .fillMaxWidth(),
                 onClick = {
-                    isCodeMaker = true
-                    isLoading = true
                     createGameCode(
                         database,
+                        username.text,
                         code.text,
                         onError = {
-                            isLoading = false
                             errorMessage = it
                         },
                         onSuccess = {
-                            isLoading = false
-                            errorMessage = "Game code created successfully!"
+                            errorMessage = "Joined Successfully"
                         }
                     )
                 }
-            ) {
+            ){
                 Text(
                     text = "Create Game",
                     style = TextStyle(
@@ -222,21 +266,20 @@ fun GameRoomManagement(navController: NavController) {
                         fontWeight = FontWeight(400),
                         color = Color.White
                     ),
-                    textAlign = TextAlign.Center)
+                    textAlign = TextAlign.Center
+                )
             }
 
             Spacer(
                 modifier = Modifier
-                    .height(8.dp)
+                    .height(10.dp)
             )
-
+            //Join Game
             Button(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Primary
                 ),
                 modifier = Modifier
-                    .height(50.dp)
-                    .fillMaxWidth(.6f)
                     .clip(
                         shape = RoundedCornerShape(100.dp)
                     )
@@ -244,28 +287,31 @@ fun GameRoomManagement(navController: NavController) {
                         1.dp,
                         color = TertiaryActivated,
                         shape = RoundedCornerShape(100.dp)
-                    ),
+                    )
+                    .height(50.dp)
+                    .fillMaxWidth(),
                 onClick = {
-                    isCodeMaker = false
-                    isLoading = true
                     joinGameCode(
                         database,
+                        username.text,
                         code.text,
                         onError = {
-                            isLoading = false
                             errorMessage = it
                         },
                         onSuccess = {
-                            isLoading = false
-                            errorMessage = "Joined the game successfully!"
+                            errorMessage = "Joined Successfully"
                         },
                         onRoomFull = {
-                            isLoading = false
-                            errorMessage = "Room is full! Please try another room."
+                            errorMessage = "Room is full!"
+                        },
+                        onReconnectionAllowed = {
+                            errorMessage = "Reconnected Successfully"
                         }
                     )
+
                 }
-            ) {
+
+            ){
                 Text(
                     text = "Join Game",
                     style = TextStyle(
@@ -274,27 +320,25 @@ fun GameRoomManagement(navController: NavController) {
                         fontWeight = FontWeight(400),
                         color = Color.White
                     ),
-                    textAlign = TextAlign.Center)
+                    textAlign = TextAlign.Center
+                )
             }
-
-            Spacer(
-                modifier = Modifier
-                    .height(50.dp)
-            )
-
-            // End Game Button
-            ReturntoMainMenu(
-                navController = navController
-            )
         }
+
+        Spacer(
+            modifier = Modifier
+                .height(50.dp)
+        )
+
+        //Return to Main Menu
+        ReturntoMainMenu(
+            navController = navController
+        )
     }
 }
 
-
 @Preview
 @Composable
-fun GameRoomManagementUI(){
-    GameRoomManagement(
-        rememberNavController()
-    )
+fun SetUserNamePreview(){
+    GameRoomManagement(rememberNavController())
 }

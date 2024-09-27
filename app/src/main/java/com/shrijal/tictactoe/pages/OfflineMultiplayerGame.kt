@@ -202,7 +202,7 @@ fun OfflineMultiplayer(navController: NavController) {
 
         Spacer(
             modifier = Modifier
-                .height(50.dp)
+                .weight(1f)
         )
 
         // End Game Button

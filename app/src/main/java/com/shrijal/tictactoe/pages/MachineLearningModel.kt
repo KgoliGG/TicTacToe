@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -187,6 +188,7 @@ fun MachineLearningModel(navController: NavController) {
                 fontSize = 16.sp,
                 color = Color.White,
                 letterSpacing = 2.sp,
+                textAlign = TextAlign.Center
             )
         )
 
@@ -242,7 +244,10 @@ fun MachineLearningModel(navController: NavController) {
             drawCount = drawCount
         )
 
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(
+            modifier = Modifier
+                .weight(1f)
+        )
 
         // End game button
         ReturntoMainMenu(navController = navController)
