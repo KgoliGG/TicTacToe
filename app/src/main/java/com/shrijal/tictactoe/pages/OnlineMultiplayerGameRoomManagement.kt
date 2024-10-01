@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -16,22 +17,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.shrijal.tictactoe.composable.GameModeTitle
 import com.shrijal.tictactoe.composable.GameTitle
 import com.shrijal.tictactoe.composable.ReturntoMainMenu
+import com.shrijal.tictactoe.composable.codeCheck
 import com.shrijal.tictactoe.firebase.createGameCode
 import com.shrijal.tictactoe.firebase.joinGameCode
+import com.shrijal.tictactoe.navigation.Screens
 import com.shrijal.tictactoe.ui.theme.Primary
 import com.shrijal.tictactoe.ui.theme.Tertiary
 import com.shrijal.tictactoe.ui.theme.TertiaryActivated
 import com.shrijal.tictactoe.ui.theme.montserrat
+
+val database = FirebaseDatabase.getInstance().reference.child("codes")
 
 class OnlineMultiplayerGameRoomManagement : ComponentActivity() {
 
@@ -39,20 +46,20 @@ class OnlineMultiplayerGameRoomManagement : ComponentActivity() {
         super.onCreate(savedInstanceState)
         FirebaseDatabase.getInstance().setPersistenceEnabled(true)
         setContent {
-            GameRoomManagement(rememberNavController())
+            GameRoomManagement(
+                rememberNavController(),
+                database
+            )
         }
     }
 }
 
 
 @Composable
-fun GameRoomManagement(navController: NavController){
+fun GameRoomManagement(navController: NavController, database: DatabaseReference){
     var username by remember { mutableStateOf(TextFieldValue("")) }
     var code by remember { mutableStateOf(TextFieldValue("")) }
     var errorMessage by remember { mutableStateOf("") }
-    val database = FirebaseDatabase.getInstance().reference.child("codes")
-
-    // Use LocalContext inside a Composable context
     val context = LocalContext.current
     var showToast by remember { mutableStateOf<String?>(null) }
 
@@ -77,7 +84,7 @@ fun GameRoomManagement(navController: NavController){
 
         Spacer(
             modifier = Modifier
-                .weight(1f)
+                .weight(.5f)
         )
 
         Column(
@@ -101,7 +108,7 @@ fun GameRoomManagement(navController: NavController){
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            // Textfield to enter Username
+            // Text-field to enter Username
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
@@ -142,12 +149,18 @@ fun GameRoomManagement(navController: NavController){
             // TextField to enter Room Code
             OutlinedTextField(
                 value = code,
-                onValueChange = { code = it },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                onValueChange =  {
+                    if (it.text.length <= 6){
+                        code = it
+                    }
+                },
                 shape = RoundedCornerShape(100.dp),
                 modifier = Modifier.fillMaxWidth(),
+//                label = { Text("Enter Code") },
                 placeholder = {
                     Text(
-                        text = "XXXX",
+                        text = "123456",
                         style = TextStyle(
                             fontFamily = montserrat,
                             fontWeight = FontWeight(400),
@@ -160,15 +173,14 @@ fun GameRoomManagement(navController: NavController){
                 }
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Error Message
             if (errorMessage.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(text = errorMessage, color = Tertiary)
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Create Game
             Button(
@@ -179,13 +191,26 @@ fun GameRoomManagement(navController: NavController){
                     .height(50.dp)
                     .fillMaxWidth(),
                 onClick = {
-                    createGameCode(
-                        database,
-                        username.text,
-                        code.text,
-                        onError = { errorMessage = it },
-                        onSuccess = { showToast = "Room Created and Joined Successfully" }
-                    )
+                    if (codeCheck(code.text)){
+                        createGameCode(
+                            database,
+                            username.text,
+                            code.text,
+                            onError = { errorMessage = it },
+                            onSuccess = {
+                                navController.navigate(Screens.OnlineMultiplayerGame.route
+                                    .replace("{username}", username.text)
+                                    .replace("{gameCode}", code.text)
+                                ){
+                                    launchSingleTop = true
+                                }
+                                showToast = "Room Created and Joined Successfully"
+                            }
+                        )
+                    }
+                    else {
+                        errorMessage = "Code must be of 6-Digits"
+                    }
                 }
             ) {
                 Text(
@@ -211,15 +236,36 @@ fun GameRoomManagement(navController: NavController){
                     .height(50.dp)
                     .fillMaxWidth(),
                 onClick = {
-                    joinGameCode(
-                        database,
-                        username.text,
-                        code.text,
-                        onError = { errorMessage = it },
-                        onSuccess = { showToast = "Joined Successfully!" },
-                        onRoomFull = { errorMessage = "Room is full!" },
-                        onReconnectionAllowed = { showToast = "Reconnected to the game successfully" }
-                    )
+                    if (codeCheck(code.text)){
+                        joinGameCode(
+                            database,
+                            username.text,
+                            code.text,
+                            onError = { errorMessage = it },
+                            onSuccess = {
+                                navController.navigate(Screens.OnlineMultiplayerGame.route
+                                    .replace("{username}", username.text)
+                                    .replace("{gameCode}", code.text)
+                                ){
+                                    launchSingleTop = true
+                                }
+                                showToast = "Joined Successfully!"
+                            },
+                            onRoomFull = { errorMessage = "Room is full!" },
+                            onReconnectionAllowed = {
+                                navController.navigate(Screens.OnlineMultiplayerGame.route
+                                    .replace("{username}", username.text)
+                                    .replace("{gameCode}", code.text)
+                                ){
+                                    launchSingleTop = true
+                                }
+                                showToast = "Reconnected to the game successfully"
+                            }
+                        )
+                    }
+                    else {
+                        errorMessage = "Code must be of 6-Digits"
+                    }
                 }
             ) {
                 Text(
@@ -235,7 +281,10 @@ fun GameRoomManagement(navController: NavController){
             }
         }
 
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(
+            modifier = Modifier
+                .weight(.5f)
+        )
 
         // Return to Main Menu
         ReturntoMainMenu(navController = navController)
@@ -245,7 +294,7 @@ fun GameRoomManagement(navController: NavController){
     showToast?.let {
         LaunchedEffect(it) {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            showToast = null // Reset the message after showing toast
+            showToast = null
         }
     }
 }
@@ -254,5 +303,7 @@ fun GameRoomManagement(navController: NavController){
 @Preview
 @Composable
 fun SetUserNamePreview(){
-    GameRoomManagement(rememberNavController())
+    GameRoomManagement(
+        rememberNavController(),
+        database)
 }
