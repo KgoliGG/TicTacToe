@@ -30,7 +30,7 @@ fun createGameCode(
                 } else {
                     // Create a room under the game code and add the first player
                     val roomRef = database.child(code)
-                    roomRef.child("gamecodes").child("Player 1").setValue(user1).addOnCompleteListener { task ->
+                    roomRef.child("rooms").child("Player 1").setValue(user1).addOnCompleteListener { task ->
                         if (task.isSuccessful) {
 //                            println("$code is successfully created with user1: $user1")
                             roomRef.child("board").setValue(listOf("", "", "", "", "", "", "", "", ""))
@@ -53,7 +53,7 @@ fun createGameCode(
         )
     }
     val expiryTime = 30 * 60 * 1000 // 30 minutes in milliseconds
-    database.child("gamecodes").child(code).onDisconnect().removeValue() // Cleanup if the client disconnects
+    database.child("rooms").child(code).onDisconnect().removeValue() // Cleanup if the client disconnects
     scheduleRoomExpiry(database, code, expiryTime)
 }
 
@@ -159,3 +159,7 @@ fun scheduleRoomExpiry(database: DatabaseReference, gameCode: String, expiryTime
     })
 }
 
+fun updateLastActivity(database: DatabaseReference, gameCode: String) {
+    val currentTime = mapOf("timestamp" to ServerValue.TIMESTAMP)
+    database.child("rooms").child(gameCode).child("lastActivity").setValue(currentTime)
+}

@@ -39,7 +39,7 @@ import com.shrijal.tictactoe.ui.theme.Tertiary
 import com.shrijal.tictactoe.ui.theme.TertiaryActivated
 import com.shrijal.tictactoe.ui.theme.montserrat
 
-val database = FirebaseDatabase.getInstance().reference.child("codes")
+val database = FirebaseDatabase.getInstance().reference.child("rooms")
 
 class OnlineMultiplayerGameRoomManagement : ComponentActivity() {
 

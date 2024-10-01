@@ -1,81 +1,77 @@
-//package com.shrijal.tictactoe.composable
-//
-//import android.os.Bundle
-//import androidx.activity.ComponentActivity
-//import androidx.activity.compose.setContent
-//import androidx.compose.animation.core.*
-//import androidx.compose.foundation.*
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.*
-//import androidx.compose.ui.draw.*
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.text.*
-//import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.tooling.preview.Preview
-//import androidx.compose.ui.unit.*
-//import androidx.navigation.NavController
-//import androidx.navigation.compose.rememberNavController
-//import com.google.firebase.database.DatabaseReference
-//import com.shrijal.tictactoe.composable.checkWinner
-//import com.shrijal.tictactoe.composable.CurrentPlayerText
-//import com.shrijal.tictactoe.composable.GameModeTitle
-//import com.shrijal.tictactoe.composable.GameTitle
-//import com.shrijal.tictactoe.composable.ReturntoMainMenu
-//import com.shrijal.tictactoe.composable.Scoreboard
-//import com.shrijal.tictactoe.dialogs.ShowDialogBox
-//import com.shrijal.tictactoe.navigation.Screens
-//import com.shrijal.tictactoe.composable.reset
-//import com.shrijal.tictactoe.ui.theme.*
-//import kotlin.random.Random
-//
-//
-//@Composable
-//fun GameBoard(
-//    gameCode: String,
-//    currentPlayer: String,
-//    database: DatabaseReference
-//) {
-//    var board by remember { mutableStateOf(List(9) { "" }) }
-//    var currentTurn by remember { mutableStateOf("player1") }
-//    var winner by remember { mutableStateOf("") }
-//
-//    // Firebase listener for real-time updates
-//    LaunchedEffect(gameCode) {
-//        database.child(gameCode).get().addOnSuccessListener { snapshot ->
-//            board = (snapshot.child("board").value as List<String>?) ?: List(9) { "" }
-//            currentTurn = snapshot.child("currentTurn").value as String
-//            winner = snapshot.child("winner").value as String
-//        }
-//    }
-//
-//    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-//        Text(text = if (winner.isNotEmpty()) "$winner wins!" else "Turn: $currentTurn")
-//
-//        Spacer(modifier = Modifier.height(20.dp))
-//
-//        // Display the game board
-//        for (i in 0..2) {
-//            Row {
-//                for (j in 0..2) {
-//                    val index = i * 3 + j
-//                    Box(
-//                        modifier = Modifier
-//                            .size(100.dp)
-//                            .border(2.dp, Color.Black)
-//                            .clickable {
-//                                if (board[index].isEmpty() && currentPlayer == currentTurn && winner.isEmpty()) {
-//                                    makeMove(database, gameCode, index, currentPlayer)
-//                                }
-//                            },
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Text(text = board[index], style = TextStyle(fontSize = 36.sp))
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
+package com.shrijal.tictactoe.composable
+
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.getValue
+import com.shrijal.tictactoe.firebase.updateLastActivity
+
+fun makeMove(
+    database: DatabaseReference,
+    gameCode: String,
+    board: Array<CharArray>,
+    currentPlayer: String,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    val boardData = board.map { it.toList() } // Convert CharArray to List for Firebase storage
+
+    database.child("rooms").child(gameCode).updateChildren(
+        mapOf(
+            "board" to boardData,
+            "currentTurn" to if (currentPlayer == "X") "O" else "X"
+        )
+    ).addOnSuccessListener {
+        updateLastActivity(database, gameCode) // Update timestamp after each move
+        onSuccess()
+    }.addOnFailureListener {
+        onError(it.message ?: "Failed to update game state")
+    }
+}
+
+fun listenForGameUpdates(
+    database: DatabaseReference,
+    gameCode: String,
+    onBoardUpdate: (Array<CharArray>, String) -> Unit, // Callback with new board and current player
+    onGameOver: (String) -> Unit // Callback when game is over
+) {
+    database.child("rooms").child(gameCode).addValueEventListener(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            val board = snapshot.child("board").getValue<List<List<String>>>() ?: return
+            val currentTurn = snapshot.child("currentTurn").getValue(String::class.java) ?: "X"
+            val status = snapshot.child("status").getValue(String::class.java)
+
+            // Convert board back to Array<CharArray>
+            val boardArray = Array(3) { row ->
+                CharArray(3) { col ->
+                    board[row][col].firstOrNull() ?: ' '
+                }
+            }
+
+            if (status == "finished") {
+                onGameOver("Game Over") // Call the callback for game over
+            } else {
+                onBoardUpdate(boardArray, currentTurn) // Sync UI with new game state
+            }
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            // Handle error
+        }
+    })
+}
+
+fun declareGameOver(
+    database: DatabaseReference,
+    gameCode: String,
+    winner: String // "X", "O" or "Draw"
+) {
+    database.child("rooms").child(gameCode).updateChildren(
+        mapOf(
+            "status" to "finished",
+            "winner" to winner
+        )
+    )
+}
+

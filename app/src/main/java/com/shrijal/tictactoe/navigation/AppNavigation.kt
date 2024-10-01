@@ -55,7 +55,7 @@ fun AppNavigation(
             OnlineMultiplayerGame(
                 navController = navController,
                 gameCode = gameCode,
-                currentPlayer = username,
+                username = username,
                 database = database
             )
         }
