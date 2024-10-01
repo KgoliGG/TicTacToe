@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ServerValue
 import com.shrijal.tictactoe.composable.GameModeTitle
 import com.shrijal.tictactoe.composable.GameTitle
 import com.shrijal.tictactoe.composable.ReturntoMainMenu
@@ -62,6 +63,7 @@ fun GameRoomManagement(navController: NavController, database: DatabaseReference
     var errorMessage by remember { mutableStateOf("") }
     val context = LocalContext.current
     var showToast by remember { mutableStateOf<String?>(null) }
+    val currentTime = mapOf("timestamp" to ServerValue.TIMESTAMP)
 
     Column(
         modifier = Modifier
