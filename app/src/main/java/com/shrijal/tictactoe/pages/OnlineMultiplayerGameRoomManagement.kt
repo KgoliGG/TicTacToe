@@ -160,7 +160,7 @@ fun GameRoomManagement(navController: NavController, database: DatabaseReference
 //                label = { Text("Enter Code") },
                 placeholder = {
                     Text(
-                        text = "123456",
+                        text = "XXXXXX",
                         style = TextStyle(
                             fontFamily = montserrat,
                             fontWeight = FontWeight(400),
