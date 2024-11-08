@@ -4,6 +4,6 @@ enum class Screens(val route: String){
         LandingPage("landingpage"),
         MachineLearningModel("machinelearningmodel"),
         OfflineMultiplayerGame("offlinemultiplayergame"),
-        OnlineMultiplayerGame("onlinemultiplayergame"),
+        OnlineMultiplayerGame("onlineMultiplayerGame/{username}/{gameCode}"),
         GameRoomManagement("gameroommanagement")
 }

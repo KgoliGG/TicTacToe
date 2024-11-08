@@ -25,14 +25,17 @@ fun createGameCode(
             override fun onDataChange(snapshot: DataSnapshot) {
                 val codeExists = snapshot.children.any { it.key == code }
                 if (codeExists) {
-                    println("Code already exists")
+//                    println("Code alreadyy exists")
                     onError("Code already exists!")
                 } else {
                     // Create a room under the game code and add the first player
                     val roomRef = database.child(code)
-                    roomRef.child("players").child("player1").setValue(user1).addOnCompleteListener { task ->
+                    roomRef.child("rooms").child("Player 1").setValue(user1).addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            println("$code is successfully created with user1: $user1")
+//                            println("$code is successfully created with user1: $user1")
+                            roomRef.child("board").setValue(listOf("", "", "", "", "", "", "", "", ""))
+                            roomRef.child("currentTurn").setValue("player1")
+                            roomRef.child("winner").setValue("")
                             onSuccess()
                         } else {
                             onError(task.exception?.message ?: "Failed to create game room")
@@ -43,13 +46,17 @@ fun createGameCode(
 
             override fun onCancelled(error: DatabaseError) {
                 // Create Cancellation Log
-                println("Firebase operation cancelled: ${error.message}")
+//                println("Firebase operation cancelled: ${error.message}")
                 onError("Error creating game code!")
             }
         }
         )
     }
+    val expiryTime = 30 * 60 * 1000 // 30 minutes in milliseconds
+    database.child("rooms").child(code).onDisconnect().removeValue() // Cleanup if the client disconnects
+    scheduleRoomExpiry(database, code, expiryTime)
 }
+
 
 
 fun joinGameCode(
@@ -57,79 +64,69 @@ fun joinGameCode(
     username: String,
     code: String,
     onError: (String) -> Unit,
-    onSuccess: () -> Unit,
+    onSuccess: (GameData) -> Unit, // Pass back the game data
     onRoomFull: () -> Unit,
-    onReconnectionAllowed: () -> Unit // Callback when a player is allowed to reconnect
+    onReconnectionAllowed: () -> Unit // Callback for reconnection
 ) {
     if (code.isEmpty()) {
         onError("Please enter a valid room code!")
         return
-    }
-    else if(username.isEmpty()){
+    } else if (username.isEmpty()) {
         onError("Username is required")
         return
-    }
-    else{
+    } else {
         val roomRef = database.child(code)
-
         roomRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (!snapshot.exists()) {
                     onError("Room does not exist!")
                 } else {
-                    // Fetch player1 and player2 details
                     val player1 = snapshot.child("players").child("player1").getValue(String::class.java)
                     val player2 = snapshot.child("players").child("player2").getValue(String::class.java)
 
                     when {
-                        // If both players exist, check for reconnection
                         player1 != null && player2 != null -> {
-                            when {
-                                // Allow reconnection for player1
-                                player1 == username -> {
-                                    onReconnectionAllowed()
-                                }
-                                // Allow reconnection for player2
-                                player2 == username -> {
-                                    onReconnectionAllowed()
-                                }
-                                // Room is full and both players are different, so deny entry
-                                else -> {
-                                    onRoomFull()
-                                }
+                            if (player1 == username || player2 == username) {
+                                onReconnectionAllowed()
+                            } else {
+                                onRoomFull()
                             }
                         }
-                        // If player1 is present but player2 is not, allow player2 to join
                         player1 != null && player2 == null -> {
                             if (player1 == username) {
-                                onReconnectionAllowed() // Player1 is reconnecting
+                                onReconnectionAllowed()
                             } else {
-                                // Add the second player (player2)
-                                roomRef.child("players").child("player2").setValue(username)
-                                    .addOnCompleteListener { task ->
-                                        if (task.isSuccessful) {
-                                            onSuccess()
-                                        } else {
-                                            onError(task.exception?.message ?: "Failed to join room")
-                                        }
-                                    }
-                            }
-                        }
-                        // If player1 is not present, assign the current user as player1
-                        player1 == null -> {
-                            roomRef.child("players").child("player1").setValue(username)
-                                .addOnCompleteListener { task ->
+                                roomRef.child("players").child("player2").setValue(username).addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
-                                        onSuccess()
+                                        val gameData = GameData(
+                                            board = snapshot.child("board").children.map { it.getValue(String::class.java) ?: "" },
+                                            currentTurn = snapshot.child("currentTurn").getValue(String::class.java) ?: "player1",
+                                            player1 = player1,
+                                            player2 = username
+                                        )
+                                        onSuccess(gameData)
                                     } else {
                                         onError(task.exception?.message ?: "Failed to join room")
                                     }
                                 }
+                            }
                         }
-                        // In any other case, error out
-                        else -> {
-                            onError("Room is in an invalid state.")
+                        player1 == null -> {
+                            roomRef.child("players").child("player1").setValue(username).addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val gameData = GameData(
+                                        board = listOf("", "", "", "", "", "", "", "", ""),
+                                        currentTurn = "player1",
+                                        player1 = username,
+                                        player2 = null.toString()
+                                    )
+                                    onSuccess(gameData)
+                                } else {
+                                    onError(task.exception?.message ?: "Failed to join room")
+                                }
+                            }
                         }
+                        else -> onError("Room is in an invalid state.")
                     }
                 }
             }
@@ -137,7 +134,32 @@ fun joinGameCode(
             override fun onCancelled(error: DatabaseError) {
                 onError(error.message)
             }
-        }
-        )
+        })
     }
+}
+
+
+fun scheduleRoomExpiry(database: DatabaseReference, gameCode: String, expiryTime: Int) {
+    val currentTime = System.currentTimeMillis()
+    val roomRef = database.child("rooms").child(gameCode)
+
+    roomRef.child("lastActivity").addListenerForSingleValueEvent(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            val lastActivity = snapshot.getValue(Long::class.java) ?: currentTime
+            val timeElapsed = currentTime - lastActivity
+
+            if (timeElapsed >= expiryTime) {
+                roomRef.removeValue() // Remove the room if it's expired
+            }
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            // Handle error
+        }
+    })
+}
+
+fun updateLastActivity(database: DatabaseReference, gameCode: String) {
+    val currentTime = mapOf("timestamp" to ServerValue.TIMESTAMP)
+    database.child("rooms").child(gameCode).child("lastActivity").setValue(currentTime)
 }
