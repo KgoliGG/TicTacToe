@@ -18,20 +18,11 @@ import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.database.*
-import com.shrijal.tictactoe.composable.ReturntoMainMenu
-import com.shrijal.tictactoe.composable.makeMove
 import com.shrijal.tictactoe.ui.theme.*
 import android.widget.Toast
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import com.shrijal.tictactoe.composable.GameModeTitle
-import com.shrijal.tictactoe.composable.GameTitle
-
-// Firebase reference to room data
+import androidx.compose.animation.core.*
+import androidx.compose.ui.draw.*
+import com.shrijal.tictactoe.composable.*
 
 class OnlineMultiplayerGameActivity : ComponentActivity() {
 
@@ -56,16 +47,26 @@ fun OnlineMultiplayerGame(
     username: String
 ) {
     var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) }
-    var currentPlayer by remember { mutableStateOf("X") }
+    var currentPlayer by remember { mutableStateOf("player1") }
+    var playerMark by remember { mutableStateOf("X") }
     var gameStatus by remember { mutableStateOf("active") }
     var errorMessage by remember { mutableStateOf("") }
     var showToast by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
-    // Listen to game state changes from Firebase
+    // Setup the game and assign the player mark
+    LaunchedEffect(Unit) {
+        setupGame(database, gameCode, username)
+        database.child("rooms").child(gameCode).child("marks").child(username).get()
+            .addOnSuccessListener { snapshot ->
+                playerMark = snapshot.getValue(String::class.java) ?: "X"
+            }
+    }
+
     listenForGameUpdates(
         database,
         gameCode,
+        username,
         onBoardUpdate = { newBoard, newCurrentPlayer ->
             board = newBoard
             currentPlayer = newCurrentPlayer
@@ -77,28 +78,19 @@ fun OnlineMultiplayerGame(
     )
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Primary)
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().background(Primary).padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
-        // Game UI Design
         GameTitle()
+        GameModeTitle(text = "Online Multiplayer")
 
-        GameModeTitle(text = "Offline Multiplayer")
+        Spacer(modifier = Modifier.height(50.dp))
 
-        Spacer(
-            modifier = Modifier
-                .height(50.dp)
-        )
-
-        // Display the Tic-Tac-Toe board
+        // Game Board
         GameBoard(board = board, onMoveMade = { row, col ->
-            if (gameStatus == "active" && board[row][col] == ' ' && currentPlayer == username.first().toString()) {
-                board[row][col] = currentPlayer.first() // Update board locally
+            if (gameStatus == "active" && board[row][col] == ' ' && currentPlayer == username) {
+                board[row][col] = playerMark.first()
                 makeMove(database, gameCode, board, currentPlayer, onSuccess = {
                     errorMessage = ""
                 }, onError = {
@@ -109,27 +101,19 @@ fun OnlineMultiplayerGame(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Display the current player turn
         Text(
             text = if (gameStatus == "finished") "Game Over" else "Player Turn: $currentPlayer",
-            style = TextStyle(
-                fontFamily = montserrat,
-                fontSize = 16.sp,
-                fontWeight = FontWeight(400),
-                color = Color.White
-            )
+            style = TextStyle(fontFamily = montserrat, fontSize = 16.sp, fontWeight = FontWeight(400), color = Color.White)
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Error Message
         if (errorMessage.isNotEmpty()) {
             Text(text = errorMessage, color = Tertiary)
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Show Toast for game over or notifications
         showToast?.let {
             LaunchedEffect(it) {
                 Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -137,19 +121,17 @@ fun OnlineMultiplayerGame(
             }
         }
 
-        // Return to Main Menu Button
         ReturntoMainMenu(navController = navController)
     }
 }
+
 
 @Composable
 fun GameBoard(
     board: Array<CharArray>,
     onMoveMade: (Int, Int) -> Unit
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         for (i in 0..2) {
             Row {
                 for (j in 0..2) {
@@ -189,50 +171,18 @@ fun GameBoard(
             }
             Spacer(modifier = Modifier.size(5.dp))
         }
-
         Spacer(modifier = Modifier.height(20.dp))
-
     }
 }
 
-// Utility function to listen for game updates
-fun listenForGameUpdates(
-    database: DatabaseReference,
-    gameCode: String,
-    onBoardUpdate: (Array<CharArray>, String) -> Unit,
-    onGameOver: (String) -> Unit
-) {
-    database.child("rooms").child(gameCode).addValueEventListener(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val boardData = snapshot.child("board").getValue<List<List<String>>>() ?: return
-            val currentTurn = snapshot.child("currentTurn").getValue(String::class.java) ?: "X"
-            val status = snapshot.child("status").getValue(String::class.java)
 
-            val boardArray = Array(3) { row ->
-                CharArray(3) { col ->
-                    boardData[row][col].firstOrNull() ?: ' '
-                }
-            }
-
-            if (status == "finished") {
-                onGameOver("Game Over!")
-            } else {
-                onBoardUpdate(boardArray, currentTurn)
-            }
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            // Handle error
-        }
-    })
-}
 
 @Preview
 @Composable
 fun OnlineMultiplayerGamePreview() {
     OnlineMultiplayerGame(
         navController = rememberNavController(),
-        database = database,
+        database = FirebaseDatabase.getInstance().reference,
         gameCode = "123456",
         username = "Player1"
     )

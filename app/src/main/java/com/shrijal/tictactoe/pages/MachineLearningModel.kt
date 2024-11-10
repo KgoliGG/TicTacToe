@@ -59,6 +59,7 @@ fun MachineLearningModel(navController: NavController) {
             showDialog = false
         },
         onPlayAgain = {
+            saveQTable(context, qTable) // Save Q-table before New game
             resetGameTrigger = true
             showDialog = false
         },
@@ -102,7 +103,7 @@ fun MachineLearningModel(navController: NavController) {
     fun makeAIMove() {
         scope.launch {
             delay(1000) // 1-second delay for AI's move
-            val bestMove = chooseAction(board, qTable)
+            val bestMove = findBestMove(board, qTable)
             board[bestMove.row][bestMove.col] = 'O'
             val lastAction = bestMove // Store the last action
             winner = checkWinner(

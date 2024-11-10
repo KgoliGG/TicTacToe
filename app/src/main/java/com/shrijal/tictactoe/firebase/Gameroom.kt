@@ -4,7 +4,7 @@ import com.google.firebase.database.*
 
 fun createGameCode(
     database: DatabaseReference,
-    user1: String,
+    username: String,
     code: String,
     onError: (String) -> Unit,
     onSuccess: () -> Unit
@@ -12,30 +12,27 @@ fun createGameCode(
     if (code.isEmpty()) {
         onError("Enter a valid code!")
         return
-    }
-    else if (user1.isEmpty()){
+    } else if (username.isEmpty()) {
         onError("Username is required")
         return
-    }
-    else{
-        // Create Log
+    } else {
         println("Attempting to create code: $code")
 
         database.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val codeExists = snapshot.children.any { it.key == code }
+                val codeExists = snapshot.hasChild(code)
                 if (codeExists) {
-//                    println("Code alreadyy exists")
                     onError("Code already exists!")
                 } else {
-                    // Create a room under the game code and add the first player
+                    // Create a new game room under the game code
                     val roomRef = database.child(code)
-                    roomRef.child("rooms").child("Player 1").setValue(user1).addOnCompleteListener { task ->
+                    roomRef.child("players").child("player1").setValue(username).addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-//                            println("$code is successfully created with user1: $user1")
-                            roomRef.child("board").setValue(listOf("", "", "", "", "", "", "", "", ""))
+                            // Initialize game board and settings
+                            roomRef.child("board").setValue(List(9) { "" })  // Empty 3x3 board
                             roomRef.child("currentTurn").setValue("player1")
                             roomRef.child("winner").setValue("")
+                            roomRef.child("playerMarks").setValue(mapOf("player1" to "X", "player2" to "O"))  // Assign marks
                             onSuccess()
                         } else {
                             onError(task.exception?.message ?: "Failed to create game room")
@@ -45,28 +42,26 @@ fun createGameCode(
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Create Cancellation Log
+//                Create Cancellation Log
 //                println("Firebase operation cancelled: ${error.message}")
                 onError("Error creating game code!")
             }
-        }
-        )
+        })
+
+        val expiryTime = 30 * 60 * 1000 // 30 minutes in milliseconds
+        database.child("rooms").child(code).onDisconnect().removeValue() // Cleanup if the client disconnects
+        scheduleRoomExpiry(database, code, expiryTime)
     }
-    val expiryTime = 30 * 60 * 1000 // 30 minutes in milliseconds
-    database.child("rooms").child(code).onDisconnect().removeValue() // Cleanup if the client disconnects
-    scheduleRoomExpiry(database, code, expiryTime)
 }
-
-
 
 fun joinGameCode(
     database: DatabaseReference,
     username: String,
     code: String,
     onError: (String) -> Unit,
-    onSuccess: (GameData) -> Unit, // Pass back the game data
+    onSuccess: (GameData) -> Unit,
     onRoomFull: () -> Unit,
-    onReconnectionAllowed: () -> Unit // Callback for reconnection
+    onReconnectionAllowed: () -> Unit
 ) {
     if (code.isEmpty()) {
         onError("Please enter a valid room code!")
@@ -98,6 +93,7 @@ fun joinGameCode(
                             } else {
                                 roomRef.child("players").child("player2").setValue(username).addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
+                                        roomRef.child("playerMarks").setValue(mapOf("player1" to "X", "player2" to "O")) // Assign marks
                                         val gameData = GameData(
                                             board = snapshot.child("board").children.map { it.getValue(String::class.java) ?: "" },
                                             currentTurn = snapshot.child("currentTurn").getValue(String::class.java) ?: "player1",
@@ -114,11 +110,12 @@ fun joinGameCode(
                         player1 == null -> {
                             roomRef.child("players").child("player1").setValue(username).addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
+                                    roomRef.child("playerMarks").setValue(mapOf("player1" to "X")) // Set player1 mark only
                                     val gameData = GameData(
-                                        board = listOf("", "", "", "", "", "", "", "", ""),
+                                        board = List(9) { "" },
                                         currentTurn = "player1",
                                         player1 = username,
-                                        player2 = null.toString()
+                                        player2 = ""
                                     )
                                     onSuccess(gameData)
                                 } else {
@@ -137,6 +134,7 @@ fun joinGameCode(
         })
     }
 }
+
 
 
 fun scheduleRoomExpiry(database: DatabaseReference, gameCode: String, expiryTime: Int) {
