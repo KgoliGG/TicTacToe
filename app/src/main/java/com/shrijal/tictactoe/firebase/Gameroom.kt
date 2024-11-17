@@ -30,8 +30,7 @@ fun createGameCode(
                         if (task.isSuccessful) {
                             roomRef.child("board").setValue(List(9) { "" }) // Initialize empty board
                             roomRef.child("players/player1").setValue(username)
-                            roomRef.child("currentTurn").setValue("player1")
-                            roomRef.child("marks/player1").setValue("X")
+                            roomRef.child("marks/$username").setValue("X")
                             roomRef.child("winner").setValue("")
                             onSuccess()
                         } else {

@@ -148,23 +148,23 @@ fun GameBoard(
                         if (board[i][j] != ' ') {
                             Text(
                                 text = board[i][j].toString(),
-style = TextStyle(
-fontFamily = montserrat,
-fontWeight = FontWeight(600),
-fontSize = 60.sp,
-),
-modifier = Modifier.scale(scale),
-color = if (board[i][j] == 'X') Secondary else Tertiary
-)
-}
-}
-Spacer(modifier = Modifier.size(5.dp))
-}
-}
-Spacer(modifier = Modifier.size(5.dp))
-}
-Spacer(modifier = Modifier.height(20.dp))
-}
+                                style = TextStyle(
+                                    fontFamily = montserrat,
+                                    fontWeight = FontWeight(600),
+                                    fontSize = 60.sp,
+                                    ),
+                                modifier = Modifier.scale(scale),
+                                color = if (board[i][j] == 'X') Secondary else Tertiary
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.size(5.dp))
+                }
+            }
+            Spacer(modifier = Modifier.size(5.dp))
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+    }
 }
 
 
