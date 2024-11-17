@@ -17,36 +17,37 @@ const val gamma = 1f  // Discount factor
 const val epsilon = 10  // Exploration rate
 
 // Function to evaluate the board state
-fun evaluate(board: Array<CharArray>): Int {
+fun evaluate(board: Array<CharArray>, depth: Int): Int {
     // Checking Rows for X or O victory.
     for (row in 0..2) {
         if (board[row][0] == board[row][1] && board[row][1] == board[row][2]) {
-            if (board[row][0] == 'X') return 10
-            if (board[row][0] == 'O') return -10
+            if (board[row][0] == 'X') return 10 - depth // Faster wins are better
+            if (board[row][0] == 'O') return depth - 10 // Delay losses
         }
     }
 
     // Checking Columns for X or O victory.
     for (col in 0..2) {
         if (board[0][col] == board[1][col] && board[1][col] == board[2][col]) {
-            if (board[0][col] == 'X') return 10
-            if (board[0][col] == 'O') return -10
+            if (board[0][col] == 'X') return 10 - depth
+            if (board[0][col] == 'O') return depth - 10
         }
     }
 
     // Checking Diagonals for X or O victory.
     if (board[0][0] == board[1][1] && board[1][1] == board[2][2]) {
-        if (board[0][0] == 'X') return 10
-        if (board[0][0] == 'O') return -10
+        if (board[0][0] == 'X') return 10 - depth
+        if (board[0][0] == 'O') return depth - 10
     }
     if (board[0][2] == board[1][1] && board[1][1] == board[2][0]) {
-        if (board[0][2] == 'X') return 10
-        if (board[0][2] == 'O') return -10
+        if (board[0][2] == 'X') return 10 - depth
+        if (board[0][2] == 'O') return depth - 10
     }
 
     // No winner yet
     return 0
 }
+
 
 // Function to check if there are moves left
 fun isMovesLeft(board: Array<CharArray>): Boolean {
@@ -107,14 +108,32 @@ fun chooseAction(board: Array<CharArray>, qTable: QTable): Move {
 }
 
 // Function to find the best move using Q-table
-fun findBestMove(board: Array<CharArray>, qTable: QTable): Move {
-    val state = boardToString(board)
-    val moves = qTable[state] ?: initializeMoves(board)
+fun findBestMoveUsingEvaluation(board: Array<CharArray>, depth: Int): Move {
+    var bestScore = Int.MIN_VALUE
+    var bestMove = Move(-1, -1)
 
-    // Pick the move with the highest Q-value
-    val bestAction = moves.maxByOrNull { it.value }?.key ?: "${0},${0}"
-    val parts = bestAction.split(",")
-    return Move(parts[0].toInt(), parts[1].toInt())
+    for (row in 0..2) {
+        for (col in 0..2) {
+            // Check if the cell is empty
+            if (board[row][col] == ' ') {
+                // Make the move
+                board[row][col] = 'O'
+
+                // Evaluate the board after the move
+                val moveScore = evaluate(board, depth)
+
+                // Undo the move
+                board[row][col] = ' '
+
+                // Choose the move with the highest score
+                if (moveScore > bestScore) {
+                    bestScore = moveScore
+                    bestMove = Move(row, col)
+                }
+            }
+        }
+    }
+    return bestMove
 }
 
 // Function to update Q-values based on game result

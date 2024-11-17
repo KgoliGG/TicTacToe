@@ -101,33 +101,39 @@ fun MachineLearningModel(navController: NavController) {
 
     // Function to handle AI move with delay
     fun makeAIMove() {
-        scope.launch {
-            delay(1000) // 1-second delay for AI's move
-            val bestMove = findBestMove(board, qTable)
-            board[bestMove.row][bestMove.col] = 'O'
-            val lastAction = bestMove // Store the last action
-            winner = checkWinner(
-                board,
-                onWin = { winningPlayer ->
-                    dialogMessage = "Player $winningPlayer Wins!"
-                    if (winningPlayer == "O") {
-                        wincountPlayer2++
-                        updateQValues(qTable, board, "lose", lastAction) // Update Q-values for AI losing
-                    } else {
-                        wincountPlayer1++
-                        updateQValues(qTable, board, "win", lastAction) // Update Q-values for AI winning
+        if (!isAIMoving) { // Ensure AI makes only one move per turn
+            isAIMoving = true
+            scope.launch {
+                delay(1000) // 1-second delay for AI's move
+
+                val bestMove = findBestMoveUsingEvaluation(board, 0)
+                board[bestMove.row][bestMove.col] = 'O'
+                val lastAction = bestMove // Store the last action
+
+                winner = checkWinner(
+                    board,
+                    onWin = { winningPlayer ->
+                        dialogMessage = "Player $winningPlayer Wins!"
+                        if (winningPlayer == "O") {
+                            wincountPlayer2++
+                            updateQValues(qTable, board, "lose", lastAction) // Update Q-values for AI losing
+                        } else {
+                            wincountPlayer1++
+                            updateQValues(qTable, board, "win", lastAction) // Update Q-values for AI winning
+                        }
+                        showDialog = true
+                    },
+                    onDraw = {
+                        dialogMessage = "It's a Draw!"
+                        drawCount++
+                        updateQValues(qTable, board, "draw", lastAction) // Update Q-values for a draw
+                        showDialog = true
                     }
-                    showDialog = true
-                },
-                onDraw = {
-                    dialogMessage = "It's a Draw!"
-                    drawCount++
-                    updateQValues(qTable, board, "draw", lastAction) // Update Q-values for a draw
-                    showDialog = true
-                }
-            )
-            isAIMoving = false
-            currentPlayer = 'X'
+                )
+
+                isAIMoving = false
+                currentPlayer = 'X'
+            }
         }
     }
 
