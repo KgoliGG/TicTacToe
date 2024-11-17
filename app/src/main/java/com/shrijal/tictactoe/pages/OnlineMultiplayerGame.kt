@@ -54,14 +54,6 @@ fun OnlineMultiplayerGame(
     var showToast by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
-    // Setup the game and assign the player mark
-    LaunchedEffect(Unit) {
-        setupGame(database, gameCode, username)
-        database.child("rooms").child(gameCode).child("marks").child(username).get()
-            .addOnSuccessListener { snapshot ->
-                playerMark = snapshot.getValue(String::class.java) ?: "X"
-            }
-    }
 
     listenForGameUpdates(
         database,

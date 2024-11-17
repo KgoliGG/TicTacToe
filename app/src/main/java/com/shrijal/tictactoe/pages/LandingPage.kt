@@ -150,7 +150,7 @@ fun LandingPage(navController: NavController) {
                     shape = RoundedCornerShape(100.dp)
                 ),
             onClick = {
-                navController.navigate(Screens.OnlineMultiplayerGame.name)
+                navController.navigate(Screens.GameRoomManagement.name)
 
             }
         ) {

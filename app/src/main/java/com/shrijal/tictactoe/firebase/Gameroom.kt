@@ -25,14 +25,14 @@ fun createGameCode(
                     onError("Code already exists!")
                 } else {
                     // Create a new game room under the game code
-                    val roomRef = database.child(code)
+                    val roomRef = database.child("rooms").child(code)
                     roomRef.child("players").child("player1").setValue(username).addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            // Initialize game board and settings
-                            roomRef.child("board").setValue(List(9) { "" })  // Empty 3x3 board
+                            roomRef.child("board").setValue(List(9) { "" }) // Initialize empty board
+                            roomRef.child("players/player1").setValue(username)
                             roomRef.child("currentTurn").setValue("player1")
+                            roomRef.child("marks/player1").setValue("X")
                             roomRef.child("winner").setValue("")
-                            roomRef.child("playerMarks").setValue(mapOf("player1" to "X", "player2" to "O"))  // Assign marks
                             onSuccess()
                         } else {
                             onError(task.exception?.message ?: "Failed to create game room")
@@ -49,7 +49,7 @@ fun createGameCode(
         })
 
         val expiryTime = 30 * 60 * 1000 // 30 minutes in milliseconds
-        database.child("rooms").child(code).onDisconnect().removeValue() // Cleanup if the client disconnects
+        database.child("players").child(code).onDisconnect().removeValue() // Cleanup if the client disconnects
         scheduleRoomExpiry(database, code, expiryTime)
     }
 }
@@ -70,7 +70,7 @@ fun joinGameCode(
         onError("Username is required")
         return
     } else {
-        val roomRef = database.child(code)
+        val roomRef = database.child("rooms").child(code)
         roomRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (!snapshot.exists()) {
@@ -93,7 +93,8 @@ fun joinGameCode(
                             } else {
                                 roomRef.child("players").child("player2").setValue(username).addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
-                                        roomRef.child("playerMarks").setValue(mapOf("player1" to "X", "player2" to "O")) // Assign marks
+                                        roomRef.child("players/player2").setValue(username)
+                                        roomRef.child("marks/player2").setValue("O")
                                         val gameData = GameData(
                                             board = snapshot.child("board").children.map { it.getValue(String::class.java) ?: "" },
                                             currentTurn = snapshot.child("currentTurn").getValue(String::class.java) ?: "player1",
