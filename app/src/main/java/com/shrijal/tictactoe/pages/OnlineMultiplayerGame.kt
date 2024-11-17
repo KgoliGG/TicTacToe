@@ -46,28 +46,43 @@ fun OnlineMultiplayerGame(
     gameCode: String,
     username: String
 ) {
-    var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) }
+//    var board by remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) }
+    val board = remember { mutableStateOf(Array(3) { CharArray(3) { ' ' } }) }
+
     var currentPlayer by remember { mutableStateOf("player1") }
-    var playerMark by remember { mutableStateOf("X") }
     var gameStatus by remember { mutableStateOf("active") }
     var errorMessage by remember { mutableStateOf("") }
     var showToast by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+    val playerMark = database.child("rooms").child(gameCode).child("marks").child(username)
+    val winner = remember { mutableStateOf("") }
 
 
-    listenForGameUpdates(
-        database,
-        gameCode,
-        username,
-        onBoardUpdate = { newBoard, newCurrentPlayer ->
-            board = newBoard
-            currentPlayer = newCurrentPlayer
-        },
-        onGameOver = {
-            gameStatus = "finished"
-            showToast = it
-        }
-    )
+//    listenForGameUpdates(
+//        database,
+//        gameCode,
+//        username,
+//        onBoardUpdate = { newBoard, newCurrentPlayer ->
+//            board = newBoard
+//            currentPlayer = newCurrentPlayer
+//        },
+//        onGameOver = {
+//            gameStatus = "finished"
+//            showToast = it
+//        }
+//    )
+    LaunchedEffect(Unit) {
+        listenForBoardUpdates(
+            database = database,
+            code = gameCode,
+            onBoardUpdate = { updatedBoard ->
+                board.value = updatedBoard
+            },
+            onGameOver = { gameWinner ->
+                winner.value = gameWinner
+            }
+        )
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().background(Primary).padding(16.dp),
@@ -80,31 +95,63 @@ fun OnlineMultiplayerGame(
         Spacer(modifier = Modifier.height(50.dp))
 
         // Game Board
-        GameBoard(board = board, onMoveMade = { row, col ->
-            if (gameStatus == "active" && board[row][col] == ' ' && currentPlayer == username) {
-                board[row][col] = playerMark.first()
-                makeMove(database, gameCode, board, currentPlayer, onSuccess = {
-                    errorMessage = ""
-                }, onError = {
-                    errorMessage = it
-                })
+        GameBoard(
+            board = board.value,
+            currentPlayer = currentPlayer,
+            username = username,
+            playerMark = playerMark.toString(),
+            onMoveMade = { row, col ->
+                if (gameStatus == "active") {
+                    makeMove(
+                        database = database,
+                        gameCode = gameCode,
+                        row = row,
+                        col = col,
+                        currentPlayer = username,
+                        playerMark = playerMark.toString(),
+                        onSuccess = {
+                            errorMessage = ""
+                        },
+                        onError = { error ->
+                            errorMessage = error
+                        }
+                    )
+                }
             }
-        })
+        )
+
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
-            text = if (gameStatus == "finished") "Game Over" else "Player Turn: $currentPlayer",
-            style = TextStyle(fontFamily = montserrat, fontSize = 16.sp, fontWeight = FontWeight(400), color = Color.White)
+            text = if (gameStatus == "finished") {
+                "Game Over"
+            }
+            else {
+                "Player Turn: $currentPlayer"
+            },
+            style = TextStyle(
+                fontFamily = montserrat,
+                fontSize = 16.sp,
+                fontWeight = FontWeight(400),
+                color = Color.White)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(
+            modifier = Modifier
+                .height(20.dp)
+        )
 
         if (errorMessage.isNotEmpty()) {
-            Text(text = errorMessage, color = Tertiary)
+            Text(
+                text = errorMessage,
+                color = Tertiary
+            )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(
+            modifier = Modifier
+                .height(20.dp))
 
         showToast?.let {
             LaunchedEffect(it) {
@@ -121,6 +168,9 @@ fun OnlineMultiplayerGame(
 @Composable
 fun GameBoard(
     board: Array<CharArray>,
+    currentPlayer: String,
+    username: String,
+    playerMark: String,
     onMoveMade: (Int, Int) -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -134,15 +184,19 @@ fun GameBoard(
                     Box(
                         modifier = Modifier
                             .size(100.dp)
-                            .clip(shape = RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(10.dp))
                             .background(
-                                color = when (board[i][j]) {
+                                when (board[i][j]) {
                                     'X' -> SecondaryActivated
                                     'O' -> TertiaryActivated
                                     else -> Deactivated
                                 }
                             )
-                            .clickable { if (board[i][j] == ' ') onMoveMade(i, j) },
+                            .clickable {
+                                if (board[i][j] == ' ' && currentPlayer == username) {
+                                    onMoveMade(i, j)
+                                }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         if (board[i][j] != ' ') {
@@ -152,7 +206,7 @@ fun GameBoard(
                                     fontFamily = montserrat,
                                     fontWeight = FontWeight(600),
                                     fontSize = 60.sp,
-                                    ),
+                                ),
                                 modifier = Modifier.scale(scale),
                                 color = if (board[i][j] == 'X') Secondary else Tertiary
                             )
@@ -163,9 +217,10 @@ fun GameBoard(
             }
             Spacer(modifier = Modifier.size(5.dp))
         }
-        Spacer(modifier = Modifier.height(20.dp))
     }
 }
+
+
 
 
 

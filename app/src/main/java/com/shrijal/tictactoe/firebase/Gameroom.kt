@@ -18,25 +18,29 @@ fun createGameCode(
     } else {
         println("Attempting to create code: $code")
 
-        database.addListenerForSingleValueEvent(object : ValueEventListener {
+        // Check if the room code already exists
+        database.child("rooms").addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val codeExists = snapshot.hasChild(code)
+                val codeExists = snapshot.hasChild(code) // Check if room exists
                 if (codeExists) {
-                    onError("Code already exists!")
+                    onError("Room code already exists. Try a different one!")
                 } else {
-                    // Create a new game room under the game code
                     val roomRef = database.child("rooms").child(code)
-                    roomRef.child("players").child("player1").setValue(username).addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            roomRef.child("board").setValue(List(9) { "" }) // Initialize empty board
-                            roomRef.child("players/player1").setValue(username)
-                            roomRef.child("marks/$username").setValue("X")
-                            roomRef.child("winner").setValue("")
-                            onSuccess()
-                        } else {
-                            onError(task.exception?.message ?: "Failed to create game room")
+                    roomRef.child("players").child("player1").setValue(username)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                // Initialize room data
+                                roomRef.child("board").setValue(List(9) { "" }) // Empty board
+                                roomRef.child("marks").child(username)
+                                    .setValue("X") // Assign 'X' to player1
+                                roomRef.child("winner").setValue("") // No winner initially
+                                roomRef.child("currentTurn").setValue("player1") // Set first turn
+                                roomRef.child("status").setValue("active") // Mark room as active
+                                onSuccess()
+                            } else {
+                                onError(task.exception?.message ?: "Failed to create game room")
+                            }
                         }
-                    }
                 }
             }
 
@@ -45,13 +49,16 @@ fun createGameCode(
 //                println("Firebase operation cancelled: ${error.message}")
                 onError("Error creating game code!")
             }
-        })
+        }
+        )
 
         val expiryTime = 30 * 60 * 1000 // 30 minutes in milliseconds
-        database.child("players").child(code).onDisconnect().removeValue() // Cleanup if the client disconnects
+        database.child("players").child(code).onDisconnect()
+            .removeValue() // Cleanup if the client disconnects
         scheduleRoomExpiry(database, code, expiryTime)
     }
 }
+
 
 fun joinGameCode(
     database: DatabaseReference,
@@ -93,7 +100,7 @@ fun joinGameCode(
                                 roomRef.child("players").child("player2").setValue(username).addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
                                         roomRef.child("players/player2").setValue(username)
-                                        roomRef.child("marks/player2").setValue("O")
+                                        roomRef.child("marks/$username").setValue("O")
                                         val gameData = GameData(
                                             board = snapshot.child("board").children.map { it.getValue(String::class.java) ?: "" },
                                             currentTurn = snapshot.child("currentTurn").getValue(String::class.java) ?: "player1",
