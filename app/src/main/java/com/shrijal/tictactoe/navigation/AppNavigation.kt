@@ -30,18 +30,6 @@ fun AppNavigation(
         composable(route = Screens.OfflineMultiplayerGame.name) {
             OfflineMultiplayer(navController = navController)
         }
-
-//        composable(route = Screens.OnlineMultiplayerGame.name) { backStackEntry ->
-//            val gameCode = backStackEntry.arguments?.getString("gameCode") ?: ""
-//            val username = backStackEntry.arguments?.getString("username") ?: ""
-//            OnlineMultiplayerGame(
-//                navController = navController,
-//                gameCode = gameCode,
-//                username = username,
-//                database = database
-//            )
-//        }
-
         composable(
             route = Screens.OnlineMultiplayerGame.route,
             arguments = listOf(
@@ -59,10 +47,11 @@ fun AppNavigation(
                 database = database
             )
         }
-
-
         composable(route = Screens.GameRoomManagement.name) {
-            GameRoomManagement(navController = navController, database = database) // Pass DatabaseReference
+            GameRoomManagement(
+                navController = navController,
+                database = database
+            )
         }
     }
 }

@@ -101,36 +101,47 @@ fun MachineLearningModel(navController: NavController) {
 
     // Function to handle AI move with delay
     fun makeAIMove() {
-        if (!isAIMoving) { // Ensure AI makes only one move per turn
-            isAIMoving = true
+        if(winner.isEmpty() && isAIMoving){
             scope.launch {
                 delay(1000) // 1-second delay for AI's move
-
-                val bestMove = findBestMoveUsingEvaluation(board, 0)
+                val bestMove = findBestMoveUsingEvaluation(board, 5, qTable)
                 board[bestMove.row][bestMove.col] = 'O'
                 val lastAction = bestMove // Store the last action
-
                 winner = checkWinner(
                     board,
                     onWin = { winningPlayer ->
                         dialogMessage = "Player $winningPlayer Wins!"
                         if (winningPlayer == "O") {
                             wincountPlayer2++
-                            updateQValues(qTable, board, "lose", lastAction) // Update Q-values for AI losing
+                            updateQValues(
+                                qTable,
+                                board,
+                                "lose",
+                                lastAction
+                            ) // Update Q-values for AI losing
                         } else {
                             wincountPlayer1++
-                            updateQValues(qTable, board, "win", lastAction) // Update Q-values for AI winning
+                            updateQValues(
+                                qTable,
+                                board,
+                                "win",
+                                lastAction
+                            ) // Update Q-values for AI winning
                         }
                         showDialog = true
                     },
                     onDraw = {
                         dialogMessage = "It's a Draw!"
                         drawCount++
-                        updateQValues(qTable, board, "draw", lastAction) // Update Q-values for a draw
+                        updateQValues(
+                            qTable,
+                            board,
+                            "draw",
+                            lastAction
+                        ) // Update Q-values for a draw
                         showDialog = true
                     }
                 )
-
                 isAIMoving = false
                 currentPlayer = 'X'
             }

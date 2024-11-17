@@ -48,16 +48,15 @@ fun evaluate(board: Array<CharArray>, depth: Int): Int {
     return 0
 }
 
-
-// Function to check if there are moves left
-fun isMovesLeft(board: Array<CharArray>): Boolean {
-    for (i in 0..2) {
-        for (j in 0..2) {
-            if (board[i][j] == ' ') return true
-        }
-    }
-    return false
-}
+//// Function to check if there are moves left
+//fun isMovesLeft(board: Array<CharArray>): Boolean {
+//    for (i in 0..2) {
+//        for (j in 0..2) {
+//            if (board[i][j] == ' ') return true
+//        }
+//    }
+//    return false
+//}
 
 // Function to convert board to a string for Q-table key
 fun boardToString(board: Array<CharArray>): String {
@@ -108,9 +107,11 @@ fun chooseAction(board: Array<CharArray>, qTable: QTable): Move {
 }
 
 // Function to find the best move using Q-table
-fun findBestMoveUsingEvaluation(board: Array<CharArray>, depth: Int): Move {
+fun findBestMoveUsingEvaluation(board: Array<CharArray>, depth: Int, qTable: QTable): Move {
     var bestScore = Int.MIN_VALUE
     var bestMove = Move(-1, -1)
+    val state = boardToString(board)
+    val moves = qTable[state] ?: initializeMoves(board)
 
     for (row in 0..2) {
         for (col in 0..2) {
@@ -121,10 +122,16 @@ fun findBestMoveUsingEvaluation(board: Array<CharArray>, depth: Int): Move {
 
                 // Evaluate the board after the move
                 val moveScore = evaluate(board, depth)
-
                 // Undo the move
                 board[row][col] = ' '
-
+                // Update the QTable
+                val stateKey = board.joinToString("") { it.concatToString() }
+                val actionKey = "${row},${col}"
+                // Get the current Q-value
+                val currentQValue = qTable[stateKey]?.get(actionKey) ?: 0.0f
+                // Update Q-value based on the score
+                val newQValue = currentQValue + 0.1f * (moveScore - currentQValue)
+                qTable.getOrPut(stateKey) { mutableMapOf() }[actionKey] = newQValue
                 // Choose the move with the highest score
                 if (moveScore > bestScore) {
                     bestScore = moveScore
@@ -157,7 +164,6 @@ fun updateQValues(qTable: QTable, board: Array<CharArray>, result: String, lastA
     }
 }
 
-
 // Function to save Q-table to SharedPreferences
 fun saveQTable(context: Context, qTable: QTable) {
     val sharedPref = context.getSharedPreferences("QTable", Context.MODE_PRIVATE)
@@ -178,5 +184,3 @@ fun loadQTable(context: Context): QTable {
         mutableMapOf()
     }
 }
-
-

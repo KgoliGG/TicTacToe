@@ -1,7 +1,5 @@
 package com.shrijal.tictactoe.pages
 
-import android.view.ViewGroup
-import android.widget.Button
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -152,7 +150,7 @@ fun LandingPage(navController: NavController) {
                     shape = RoundedCornerShape(100.dp)
                 ),
             onClick = {
-                navController.navigate(Screens.GameRoomManagement.name)
+                navController.navigate(Screens.OnlineMultiplayerGame.name)
 
             }
         ) {

@@ -4,8 +4,6 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.getValue
-import com.shrijal.tictactoe.firebase.updateLastActivity
 
 fun setupGame(database: DatabaseReference, gameCode: String, username: String) {
     val roomRef = database.child("rooms").child(gameCode)
