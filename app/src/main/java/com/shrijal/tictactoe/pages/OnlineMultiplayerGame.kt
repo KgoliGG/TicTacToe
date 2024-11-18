@@ -220,10 +220,6 @@ fun GameBoard(
     }
 }
 
-
-
-
-
 @Preview
 @Composable
 fun OnlineMultiplayerGamePreview() {
