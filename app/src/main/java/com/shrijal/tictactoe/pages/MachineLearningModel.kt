@@ -73,7 +73,7 @@ fun MachineLearningModel(navController: NavController) {
     LaunchedEffect(currentPlayer) {
         if (currentPlayer == 'O') {
             delay(1000) // 1-second delay for AI move
-            val move = chooseAction(board, qTable)
+            val move = findBestMoveUsingEvaluation(board,0, qTable)
             board[move.row][move.col] = 'O'
             isAIMoving = false
             currentPlayer = 'X'
